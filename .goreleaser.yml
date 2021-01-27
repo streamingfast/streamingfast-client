@@ -25,10 +25,6 @@ archives:
   files:
   - LICENSE
   - README.md
-  - CHANGELOG.md
-  - CONTRIBUTING.md
-  - DEPENDENCIES.md
-  - TROUBLESHOOTING.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
