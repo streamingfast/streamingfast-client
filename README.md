@@ -5,6 +5,8 @@ Stream Ethereum data like there's no tomorrow
 
 https://streamingfast.io/
 
+**Impressed? Star the repo!**
+
 
 ## Install
 
