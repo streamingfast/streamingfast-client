@@ -9,8 +9,6 @@ builds:
 - env:
   - CGO_ENABLED=0
   main: ./cmd/sf
-  ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
-  mod_timestamp: '{{ .CommitTimestamp }}'
   binary: sf
   goos:
     - linux
