@@ -5,12 +5,13 @@ Stream Ethereum data like there's no tomorrow
 
 https://streamingfast.io/
 
-**Impressed? Star the repo!**
+![StreamingFast Demo](https://streamingfast.io/streamingfast.gif)
 
+**Impressed? Star the repo!**
 
 ## Install
 
-Get a release from [./releases](the releases pages)
+Get a release from [the releases](https://github.com/streamingfast/streamingfast-client/releases)
 
 
 ## Usage
