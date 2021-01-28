@@ -9,9 +9,21 @@ https://streamingfast.io/
 
 **Impressed? Star the repo!**
 
+
+## Getting started
+
+1. Get an API key from https://streamingfast.io
+1. Download a release from [the releases](https://github.com/streamingfast/streamingfast-client/releases)
+1. Get streaming!
+
+
 ## Install
 
-Get a release from [the releases](https://github.com/streamingfast/streamingfast-client/releases)
+Build from source:
+
+    go get -v github.com/streamingfast/streamingfast-client/cmd/sf
+
+or download a statically linked [binary for Windows, macOS or Linux](https://github.com/streamingfast/streamingfast-client/releases).
 
 
 ## Usage
@@ -19,13 +31,13 @@ Get a release from [the releases](https://github.com/streamingfast/streamingfast
 ```bash
 $ export STREAMINGFAST_API_KEY="server_......................"
 
-# Stream UniswapV2 calls, for a single block and close
+# Watch all calls to the UniswapV2 Router, for a single block and close
 $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
-# Stream the last thousand blocks and continue forever
-$ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -1000
+# Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
+$ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 
-# Stream from the last cursor, continue forever
+# Continue where you left off, start from the last known cursor, stream forever
 $ sf --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 ```
 
