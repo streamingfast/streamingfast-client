@@ -227,6 +227,66 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
 
             [... snip ...]
 
+            "logs": [
+             {
+                "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
+                "topics": [
+
+                  // Yes, that's an ERC-20 transfer
+
+                  "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+
+                  // From address
+
+                  "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160",
+
+                  // To address
+                  "000000000000000000000000795065dcc9f64b5614c407a6efdc400da6221fb0"
+                ],
+
+                // And the amount is in here:
+                "data": "000000000000000000000000000000000000000000000130feb5cd4e3ad00000",
+
+                // This is the index of this log event within the whole block.
+
+                "blockIndex": 5
+              },
+              {
+                "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
+                "topics": [
+                  "8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
+                  "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160",
+                  "000000000000000000000000d9e1ce17f2641f24ae83637ab66a2cca9c378b9f"
+                ],
+                "data": "ffffffffffffffffffffffffffffffffffffffffffbe614b550e4dc2b786ffff",
+                "index": 1,
+                "blockIndex": 6
+              }
+            ]
+
+            // This should be helpful: you get the BALANCES (previous and next) for the
+            // updated ERC-20 accounts.  This avoids hundreds of `getBalance()` calls afterward.
+
+            "erc20BalanceChanges": [
+              {
+                "holderAddress": "164e948cb069f2008bda69d89b5bbdc0639f6783",
+                "oldBalance": "0000000000000000000000000000000000000000028427eec9781a19c7b19ac0",
+                "newBalance": "0000000000000000000000000000000000000000028427ee6162bfd660439ac0"
+              },
+              {
+                "holderAddress": "703052a1ef835dd5842190e53896672b8f9249f1",
+                "oldBalance": "00000000000000000000000000000000000000000000000068155a43676e0000",
+                "newBalance": "000000000000000000000000000000000000000000000000d02ab486cedc0000"
+              }
+            ],
+            "erc20TransferEvents": [
+              {
+                "from": "164e948cb069f2008bda69d89b5bbdc0639f6783",
+                "to": "703052a1ef835dd5842190e53896672b8f9249f1",
+                "amount": "00000000000000000000000000000000000000000000000068155a43676e0000"
+              }
+            ]
+
             // You can use this data to reverse the changes to the storage below
             // and understand which Externally Owned Address's balance is being
             // modified.. Avoid costly, and difficult to sync `getBalance()`
@@ -272,42 +332,6 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
                 "key": "d7e11f80431dbe8f8fe4aba8c8c50b6b80718ea5764ac29e9b9b6e5b537bc944",
                 "oldValue": "ffffffffffffffffffffffffffffffffffffffffffbe627c53c41b10f256ffff",
                 "newValue": "ffffffffffffffffffffffffffffffffffffffffffbe614b550e4dc2b786ffff"
-              }
-            ],
-            "logs": [
-             {
-                "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
-                "topics": [
-
-                  // Yes, that's an ERC-20 transfer
-
-                  "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-
-                  // From address
-
-                  "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160",
-
-                  // To address
-                  "000000000000000000000000795065dcc9f64b5614c407a6efdc400da6221fb0"
-                ],
-
-                // And the amount is in here:
-                "data": "000000000000000000000000000000000000000000000130feb5cd4e3ad00000",
-
-                // This is the index of this log event within the whole block.
-
-                "blockIndex": 5
-              },
-              {
-                "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
-                "topics": [
-                  "8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
-                  "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160",
-                  "000000000000000000000000d9e1ce17f2641f24ae83637ab66a2cca9c378b9f"
-                ],
-                "data": "ffffffffffffffffffffffffffffffffffffffffffbe614b550e4dc2b786ffff",
-                "index": 1,
-                "blockIndex": 6
               }
             ]
           }
