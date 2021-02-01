@@ -56,18 +56,21 @@ func main() {
 		brange = newBlockRange(args[1:])
 	}
 
-	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
-	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid dfuse API key value"))
-
 	var dialOptions []grpc.DialOption
 	if *flagSkipVerify {
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
 
+	endpoint := "blocks.mainnet.eth.dfuse.io:443"
+	if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
+		endpoint = e
+	}
+
+	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
+	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid dfuse API key value"))
 	dfuse, err := dfuse.NewClient("mainnet.eth.dfuse.io", apiKey)
 	noError(err, "unable to create dfuse client")
-
-	conn, err := dgrpc.NewExternalClient("blocks.mainnet.eth.dfuse.io:443", dialOptions...)
+	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	noError(err, "unable to create external gRPC client")
 
 	streamClient := pbbstream.NewBlockStreamV2Client(conn)
