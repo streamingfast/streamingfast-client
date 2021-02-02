@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"flag"
@@ -34,20 +35,16 @@ var statusFrequency = 15 * time.Second
 var traceEnabled = logging.IsTraceEnabled("consumer", "github.com/streamingfast/streamingfast-client")
 var zlog = logging.NewSimpleLogger("consumer", "github.com/streamingfast/streamingfast-client")
 
-var flagInsecure = flag.Bool("i", false, "When set, assume with talk over a plain-text unecrypted gRPC connection")
+var flagEndpoint = flag.String("e", "blocks.mainnet.eth.dfuse.io:443", "The endpoint to connect the stream of blocks to")
 var flagSkipVerify = flag.Bool("s", false, "When set, skips certification verification")
 var flagWrite = flag.String("o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 var flagStartCursor = flag.String("start-cursor", "", "Last cursor used to continue where you left off")
 
 func main() {
-	flag.Parse()
-
-	// [filter query] [start_block] [end_block]
-	// [filter query] [start_block]
-	// [filter-query] -start-cursor [cursor]
+	setupFlag()
 
 	args := flag.Args()
-	ensure((len(args) == 1 && *flagStartCursor != "") || len(args) > 1, errorUsage("missing arguments"))
+	ensure((len(args) == 1 && *flagStartCursor != "") || len(args) > 1, errorUsage("Expecting between 1 and 3 arguments"))
 
 	filter := args[0]
 	cursor := *flagStartCursor
@@ -61,15 +58,17 @@ func main() {
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
 
-	endpoint := "blocks.mainnet.eth.dfuse.io:443"
+	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
+	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid dfuse API key value"))
+
+	endpoint := *flagEndpoint
 	if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
 		endpoint = e
 	}
 
-	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
-	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid dfuse API key value"))
 	dfuse, err := dfuse.NewClient("mainnet.eth.dfuse.io", apiKey)
 	noError(err, "unable to create dfuse client")
+
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	noError(err, "unable to create external gRPC client")
 
@@ -253,23 +252,54 @@ func errorUsage(message string, args ...interface{}) string {
 }
 
 func usage() string {
-	return `usage: sf <filter> [start_block] [end_block]
+	return `usage: sf <filter> [<start_block>] [<end_block>]
 
-Other invocations:
+Connects to StreamingFast endpoint using the STREAMINGFAST_API_KEY from
+environment variables and stream back blocks filterted using the <filter>
+argument within the <start_block> and <end_block> if they are specified.
 
-    sf <filter> [start_block] [end_block]    # Stream a given block range
-    sf <filter> [start_block]                # Stream real-time blocks
-	sf --start-cursor [cursor] <filter>       # Stream from where you left off
+Parameters:
+  <filter>        A valid CEL filter expression for the Ethereum network, only
+                  transactions matching the filter will be returned to you.
 
+  <start_block>   Optional block number where to start streaming blocks from,
+                  Can be positive (an absolute reference to a block), or
+                  negative (a number of blocks from the tip of the chain).
 
-<filter> is a valid CEL filter expression for the Ethereum network.
+  <end_block>     Optional block number end block boundary after which (inclusively)
+				  the stream of blocks will stop If not specified, the stream
+				  will stop when the Ethereum network stops: never.
 
-start_block - can be positive (an absolute reference to a block), or
-              negative (a number of blocks from the tip of the chain).
+Flags:
+` + flagUsage() + `
+Examples:
+  # Watch all calls to the UniswapV2 Router, for a single block and close
+  sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
-end_block - an absolute end block, if not specified, the stream will stop
-            when the Ethereum network stops: never.
+  # Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
+  sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
+
+  # Continue where you left off, start from the last known cursor, stream forever
+  sf --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 `
+}
+
+func setupFlag() {
+	flag.CommandLine.Usage = func() {
+		fmt.Print(usage())
+	}
+	flag.Parse()
+}
+
+func flagUsage() string {
+	buf := bytes.NewBuffer(nil)
+	oldOutput := flag.CommandLine.Output()
+	defer func() { flag.CommandLine.SetOutput(oldOutput) }()
+
+	flag.CommandLine.SetOutput(buf)
+	flag.CommandLine.PrintDefaults()
+
+	return buf.String()
 }
 
 func ensure(condition bool, message string, args ...interface{}) {
