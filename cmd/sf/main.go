@@ -35,7 +35,7 @@ var statusFrequency = 15 * time.Second
 var traceEnabled = logging.IsTraceEnabled("consumer", "github.com/streamingfast/streamingfast-client")
 var zlog = logging.NewSimpleLogger("consumer", "github.com/streamingfast/streamingfast-client")
 
-var flagEndpoint = flag.String("e", "blocks.mainnet.eth.dfuse.io:443", "The endpoint to connect the stream of blocks to")
+var flagEndpoint = flag.String("e", "api.streamingfast.io:443", "The endpoint to connect the stream of blocks to")
 var flagSkipVerify = flag.Bool("s", false, "When set, skips certification verification")
 var flagWrite = flag.String("o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 var flagStartCursor = flag.String("start-cursor", "", "Last cursor used to continue where you left off")
@@ -59,15 +59,15 @@ func main() {
 	}
 
 	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
-	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid dfuse API key value"))
+	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid streamingfast API key value"))
 
 	endpoint := *flagEndpoint
 	if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
 		endpoint = e
 	}
 
-	dfuse, err := dfuse.NewClient("mainnet.eth.dfuse.io", apiKey)
-	noError(err, "unable to create dfuse client")
+	dfuse, err := dfuse.NewClient("api.streamingfast.io", apiKey)
+	noError(err, "unable to create streamingfast client")
 
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	noError(err, "unable to create external gRPC client")
