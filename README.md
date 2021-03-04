@@ -41,6 +41,17 @@ $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 $ sf --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 ```
 
+## Programmatic access
+
+Access is done through [gRPC](https://grpc.io/), supporting more than a dozen popular languages.
+
+You will need those two protobuf definition files: [bstream.proto](https://github.com/dfuse-io/proto/tree/develop/dfuse/bstream/v1) and [codec.proto](https://github.com/dfuse-io/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1).
+
+Refer to the [Authentication](https://docs.dfuse.io/platform/dfuse-cloud/authentication/#obtaining-a-short-lived-jwt) section of our docs for details.
+
+Take inspiration from the `main.go` file in this repository.
+
+
 ## Sample output
 
 Here is a short peek into some output. Read [**a full sample output here**](./sample_output_block_11740433.json).
