@@ -37,8 +37,11 @@ $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 # Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
 $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 
-# Continue where you left off, start from the last known cursor, stream forever
-$ sf --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+# Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
+$ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+
+# Look at ALL blocks in a given range on Binance Smart Chain (BSC)
+$ sf --bsc "true" 100000 100002 
 ```
 
 ## Programmatic access

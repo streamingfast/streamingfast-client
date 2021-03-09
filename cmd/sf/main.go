@@ -36,6 +36,11 @@ var traceEnabled = logging.IsTraceEnabled("consumer", "github.com/streamingfast/
 var zlog = logging.NewSimpleLogger("consumer", "github.com/streamingfast/streamingfast-client")
 
 var flagEndpoint = flag.String("e", "api.streamingfast.io:443", "The endpoint to connect the stream of blocks to")
+
+var flagBSC = flag.Bool("bsc", false, "When set, will force the endpoint to Binance Smart Chain")
+var flagPolygon = flag.Bool("polygon", false, "When set, will force the endpoint to Polygon (previously Matic)")
+
+var flagHandleForks = flag.Bool("handle-forks", false, "Request notifications type STEP_UNDO when a block was forked out, and STEP_IRREVERSIBLE after a block has seen enough confirmations (200)")
 var flagSkipVerify = flag.Bool("s", false, "When set, skips certification verification")
 var flagWrite = flag.String("o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 var flagStartCursor = flag.String("start-cursor", "", "Last cursor used to continue where you left off")
@@ -45,6 +50,7 @@ func main() {
 
 	args := flag.Args()
 	ensure((len(args) == 1 && *flagStartCursor != "") || len(args) > 1, errorUsage("Expecting between 1 and 3 arguments"))
+	ensure(noMoreThanOneTrue(*flagBSC, *flagPolygon), errorUsage("Cannot set more than one network flag (ex: --polygon, --bsc)"))
 
 	filter := args[0]
 	cursor := *flagStartCursor
@@ -62,8 +68,15 @@ func main() {
 	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid streamingfast API key value"))
 
 	endpoint := *flagEndpoint
-	if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
-		endpoint = e
+	switch {
+	case *flagBSC:
+		endpoint = "bsc.streamingfast.io:443"
+	case *flagPolygon:
+		endpoint = "polygon.streamingfast.io:443"
+	default:
+		if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
+			endpoint = e
+		}
 	}
 
 	dfuse, err := dfuse.NewClient("api.streamingfast.io", apiKey)
@@ -81,18 +94,23 @@ func main() {
 
 	lastBlockRef := bstream.BlockRefEmpty
 
-	zlog.Info("Starting stream", zap.Stringer("range", brange), zap.String("cursor", cursor))
+	zlog.Info("Starting stream", zap.Stringer("range", brange), zap.String("cursor", cursor), zap.String("endpoint", endpoint), zap.Bool("handle_forks", *flagHandleForks))
 stream:
 	for {
 		tokenInfo, err := dfuse.GetAPITokenInfo(context.Background())
 		noError(err, "unable to retrieve StreamingFast API token")
+
+		forkSteps := []pbbstream.ForkStep{pbbstream.ForkStep_STEP_NEW}
+		if *flagHandleForks {
+			forkSteps = append(forkSteps, pbbstream.ForkStep_STEP_IRREVERSIBLE, pbbstream.ForkStep_STEP_UNDO)
+		}
 
 		credentials := oauth.NewOauthAccess(&oauth2.Token{AccessToken: tokenInfo.Token, TokenType: "Bearer"})
 		stream, err := streamClient.Blocks(context.Background(), &pbbstream.BlocksRequestV2{
 			StartBlockNum:     brange.start,
 			StartCursor:       cursor,
 			StopBlockNum:      brange.end,
-			ForkSteps:         []pbbstream.ForkStep{pbbstream.ForkStep_STEP_IRREVERSIBLE, pbbstream.ForkStep_STEP_NEW, pbbstream.ForkStep_STEP_UNDO},
+			ForkSteps:         forkSteps,
 			IncludeFilterExpr: filter,
 			Details:           pbbstream.BlockDetails_BLOCK_DETAILS_FULL,
 		}, grpc.PerRPCCredentials(credentials))
@@ -152,6 +170,19 @@ stream:
 	println("")
 	printf("Block received: %s\n", stats.blockReceived.Overall(elapsed))
 	printf("Bytes received: %s\n", stats.bytesReceived.Overall(elapsed))
+}
+
+func noMoreThanOneTrue(bools ...bool) bool {
+	var seen bool
+	for _, b := range bools {
+		if b {
+			if seen {
+				return false
+			}
+			seen = true
+		}
+	}
+	return true
 }
 
 var endOfLine = []byte("\n")
@@ -214,6 +245,7 @@ func (s *stats) duration() time.Duration {
 }
 
 func (s *stats) recordBlock(payloadSize int64) {
+
 	if s.timeToFirstBlock == 0 {
 		s.timeToFirstBlock = time.Now().Sub(s.startTime)
 	}
@@ -252,7 +284,7 @@ func errorUsage(message string, args ...interface{}) string {
 }
 
 func usage() string {
-	return `usage: sf <filter> [<start_block>] [<end_block>]
+	return `usage: sf [flags] <filter> [<start_block>] [<end_block>]
 
 Connects to StreamingFast endpoint using the STREAMINGFAST_API_KEY from
 environment variables and stream back blocks filterted using the <filter>
@@ -274,13 +306,16 @@ Flags:
 ` + flagUsage() + `
 Examples:
   # Watch all calls to the UniswapV2 Router, for a single block and close
-  sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
+  $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
   # Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
-  sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
+  $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 
-  # Continue where you left off, start from the last known cursor, stream forever
-  sf --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+  # Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
+  $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+
+  # Look at ALL blocks in a given range on Binance Smart Chain (BSC)
+  $ sf --bsc "true" 100000 100002 
 `
 }
 
