@@ -9,6 +9,12 @@ date.
 
 # Unreleased
 
+# v0.0.3
+
+Added --polygon and --bsc endpoints
+Changed default behavior to only request NEW steps
+Added --handle-forks to request all fork steps (NEW, UNDO, IRREVERSIBLE)
+
 # v0.0.2
 
 Added ERC20 balance changes and decoded events.
