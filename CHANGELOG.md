@@ -7,7 +7,9 @@ project adheres to
 [MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
 date.
 
-# Unreleased
+# v0.0.4
+
+Added --heco endpoint
 
 # v0.0.3
 
