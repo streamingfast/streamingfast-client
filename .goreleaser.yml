@@ -82,7 +82,7 @@ signs:
   #   artifacts: all
   #   signature: "${artifact}.zip"
   #   ids:
-  #   - tracker-osx
+  #   - sf-osx
   #   cmd: sh
   #   args:
   #     - -c
@@ -93,6 +93,6 @@ signs:
   #       #
   #       # Don't try to use Bash variables, it doesn't work properly (Goreleaser replaces them up-front)
 
-  #       mv "dist/{{ .ProjectName }}_{{ .Version }}_macOS_x86_64.zip" dist/tracker.zip
+  #       mv "dist/{{ .ProjectName }}_{{ .Version }}_macOS_x86_64.zip" dist/osx-package.zip
   #       gon gon.notarize.hcl
-  #       mv dist/tracker.zip dist/"{{ .ProjectName }}_{{ .Version }}_macOS_x86_64.zip"
+  #       mv dist/osx-package.zip dist/"{{ .ProjectName }}_{{ .Version }}_macOS_x86_64.zip"

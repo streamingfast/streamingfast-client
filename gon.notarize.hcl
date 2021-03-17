@@ -1,4 +1,4 @@
-source = ["./dist/binary-osx.zip"]
+source = ["./dist/osx-package.zip"]
 bundle_id = "io.streamingfast.streamingfast-client.cmd"
 
 apple_id {
@@ -11,6 +11,6 @@ sign {
 }
 
 notarize {
-  path = "./dist/binary-osx.zip"
+  path = "./dist/osx-package.zip"
   bundle_id = "io.streamingfast.streamingfast-client.cmd"
 }
