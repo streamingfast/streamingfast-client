@@ -1,51 +1,98 @@
 project_name: streamingfast-client
+
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+
 release:
   github:
     owner: streamingfast
     name: streamingfast-client
   draft: true
   name_template: '{{.Tag}}'
-builds:
-- env:
-  - CGO_ENABLED=0
-  main: ./cmd/sf
-  binary: sf
-  goos:
-    - linux
-    - darwin
-    - windows
-  goarch:
-    - amd64
-archives:
-- replacements:
-    darwin: macOS
-    linux: linux
-    386: i386
-    amd64: x86_64
-  files:
-  - LICENSE
-  - README.md
-checksum:
-  name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ .Tag }}-next"
+  extra_files:
+    - glob: ./release/**/*
+
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
+
+builds:
+- id: sf
+  binary: sf
+  main: ./cmd/sf
+  env:
+  - CGO_ENABLED=0
+  goos:
+    - linux
+    - windows
+  goarch:
+    - amd64
+- id: sf-osx
+  binary: sf
+  main: ./cmd/sf
+  env:
+  - CGO_ENABLED=0
+  goos:
+    - darwin
+  goarch:
+    - amd64
+  hooks:
+    post:
+      - gon gon.sign.hcl
+
+archives:
+- replacements:
+    darwin: macOS
+    linux: linux
+    386: i386
+    amd64: x86_64
+  format_overrides:
+    - goos: darwin
+      format: zip
+  files:
+  - LICENSE
+  - README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
 signs:
-  - cmd: keybase
-    args:
-      - sign
-      - --infile
-      - $artifact
-      - --binary
-      - --outfile
-      - $signature
-      - --detached
-    signature: ${artifact}.sig
+  - id: gpg
     artifacts: checksum
-env_files:
-  github_token: ~/.config/goreleaser/github_token
+    args: [
+      "--pinentry-mode", "loopback",
+      "--passphrase", "{{ .Env.GPG_PASSPHRASE }}",
+      "-u", "{{ .Env.GPG_FINGERPRINT }}",
+      "--output", "${signature}",
+      "--detach-sign", "${artifact}",
+    ]
+  # Disabling notarization because I was unable to make it fit in the Goreleaser flow. Works greate
+  # until the GitHub release is uploaded at which point it complains about `${artifact}.zip` (which resolves
+  # to `dist/checksums.txt.zip`) does not exists, which is true.
+  #
+  # See https://github.com/goreleaser/goreleaser/discussions/2102
+  #
+  # - id: notarize
+  #   artifacts: all
+  #   signature: "${artifact}.zip"
+  #   ids:
+  #   - tracker-osx
+  #   cmd: sh
+  #   args:
+  #     - -c
+  #     - |
+  #       # The Gon notarization process has no way to inject it the right final versionned packaged
+  #       # name to notarize. So, from this "inline" script we move the package to a known file location,
+  #       # notarize it and then we move it back to its correct location.
+  #       #
+  #       # Don't try to use Bash variables, it doesn't work properly (Goreleaser replaces them up-front)
+
+  #       mv "dist/{{ .ProjectName }}_{{ .Version }}_macOS_x86_64.zip" dist/tracker.zip
+  #       gon gon.notarize.hcl
+  #       mv dist/tracker.zip dist/"{{ .ProjectName }}_{{ .Version }}_macOS_x86_64.zip"
