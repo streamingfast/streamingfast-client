@@ -38,4 +38,4 @@ jobs:
         run: go test ./...
 
       - name: Build binary
-        run: go build ./cmd/tracker
+        run: go build ./cmd/sf
