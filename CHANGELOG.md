@@ -7,6 +7,14 @@ project adheres to
 [MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
 date.
 
+# v0.0.6
+
+Added --fantom endpoint
+
+# v0.0.5
+
+Added OSX package signature
+
 # v0.0.4
 
 Added --heco endpoint

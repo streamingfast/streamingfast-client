@@ -40,6 +40,7 @@ var flagEndpoint = flag.String("e", "api.streamingfast.io:443", "The endpoint to
 var flagBSC = flag.Bool("bsc", false, "When set, will force the endpoint to Binance Smart Chain")
 var flagPolygon = flag.Bool("polygon", false, "When set, will force the endpoint to Polygon (previously Matic)")
 var flagHECO = flag.Bool("heco", false, "When set, will force the endpoint to Huobi Eco Chain")
+var flagFantom = flag.Bool("fantom", false, "When set, will force the endpoint to Fantom Opera Mainnet")
 
 var flagHandleForks = flag.Bool("handle-forks", false, "Request notifications type STEP_UNDO when a block was forked out, and STEP_IRREVERSIBLE after a block has seen enough confirmations (200)")
 var flagSkipVerify = flag.Bool("s", false, "When set, skips certification verification")
@@ -51,7 +52,7 @@ func main() {
 
 	args := flag.Args()
 	ensure((len(args) == 1 && *flagStartCursor != "") || len(args) > 1, errorUsage("Expecting between 1 and 3 arguments"))
-	ensure(noMoreThanOneTrue(*flagBSC, *flagPolygon, *flagHECO), errorUsage("Cannot set more than one network flag (ex: --polygon, --bsc)"))
+	ensure(noMoreThanOneTrue(*flagBSC, *flagPolygon, *flagHECO, *flagFantom), errorUsage("Cannot set more than one network flag (ex: --polygon, --bsc)"))
 
 	filter := args[0]
 	cursor := *flagStartCursor
@@ -76,6 +77,8 @@ func main() {
 		endpoint = "polygon.streamingfast.io:443"
 	case *flagHECO:
 		endpoint = "heco.streamingfast.io:443"
+	case *flagFantom:
+		endpoint = "fantom.streamingfast.io:443"
 	default:
 		if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
 			endpoint = e
@@ -325,6 +328,9 @@ Examples:
   
   # Look at ALL blocks in a given range on Huobi ECO Chain
   $ sf --heco "true" 100000 100002
+
+  # Look at recent blocks and stream forever on Fantom Opera Mainnet
+  $ sf --fantom "true" -5
 `
 }
 

@@ -48,6 +48,9 @@ $ sf --polygon "true" 100000 100002
 
 # Look at ALL blocks in a given range on Huobi ECO Chain
 $ sf --heco "true" 100000 100002
+
+# Look at recent blocks and stream forever on Fantom Opera Mainnet
+$ sf --fantom "true" -5
 ```
 
 ## Programmatic access
