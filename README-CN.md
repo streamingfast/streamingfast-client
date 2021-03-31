@@ -1,86 +1,84 @@
-[查看中文版](./README-CN.md)
+[Englihs Version](./README.md)
 
 Streaming Fast on Ethereum
 --------------------------
 
-Stream Ethereum data like there's no tomorrow
+获取以太坊极速数据流
 
 https://streamingfast.io/
 
 ![StreamingFast Demo](https://streamingfast.io/streamingfast.gif)
 
-**Impressed? Star the repo!**
+**觉得 StreamingFast 很好用吗?点亮源码库的星标！**
 
 
-## Getting started
+## 上手指南
 
-1. Get an API key from https://streamingfast.io
-1. Download a release from [the releases](https://github.com/streamingfast/streamingfast-client/releases)
-1. Get streaming!
+1. 在 https://streamingfast.io 上获取 API KEY
+2. 下载 [最新版本](https://github.com/streamingfast/streamingfast-client/releases)
+3. 连接数据流！
 
 
-## Install
+## 安装
 
-Build from source:
+从源码上开始构建：
 
     go get -v github.com/streamingfast/streamingfast-client/cmd/sf
 
-or download a statically linked [binary for Windows, macOS or Linux](https://github.com/streamingfast/streamingfast-client/releases).
+或下载静态链接[二进制程序，支持 Windows、macOS or Linux](https://github.com/streamingfast/streamingfast-client/releases)。
 
 
-## Usage
+## 使用
 
 ```bash
 $ export STREAMINGFAST_API_KEY="server_......................"
 
-# Watch all calls to the UniswapV2 Router, for a single block and close
+# 查看所有对 UniswapV2 路由的调用，查询区间为一个区块
 $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
-# Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
+# 查看所有对 UniswapV2 路由的调用，查询区间为前100个区块，并继续实时监听
 $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 
-# Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
+# 从上次的断电续连，利用最新的 cursor 定位，获取所有分叉的提示（UNDO, IRREVERSIBLE）并继续实时监听
 $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 
-# Look at ALL blocks in a given range on Binance Smart Chain (BSC)
+# 查看币安智能链（BSC）上一个指定区间的所有区块 
 $ sf --bsc "true" 100000 100002
 
-# Look at ALL blocks in a given range on Polygon Chain
+# 查看 Polygon 上一个指定区间的所有区块
 $ sf --polygon "true" 100000 100002
 
-# Look at ALL blocks in a given range on Huobi ECO Chain
+# 查看 HECO 上一个指定区间的所有区块
 $ sf --heco "true" 100000 100002
 
-# Look at recent blocks and stream forever on Fantom Opera Mainnet
+# 查看 Fantom Opera 主网上一个指定区间的所有区块
 $ sf --fantom "true" -5
 ```
 
-## Programmatic access
+## 编程语言及访问
 
-Access is done through [gRPC](https://grpc.io/), supporting more than a dozen popular languages.
+通过 [gRPC](https://grpc.io/) 提供对超过十几种编程语言的支持。
 
-You will need those two protobuf definition files: [bstream.proto](https://github.com/dfuse-io/proto/tree/develop/dfuse/bstream/v1) and [codec.proto](https://github.com/dfuse-io/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1).
+你需要两个 protobuf 定义文件：[bstream.proto](https://github.com/dfuse-io/proto/tree/develop/dfuse/bstream/v1) 以及 [codec.proto](https://github.com/dfuse-io/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1)。
 
-Refer to the [Authentication](https://docs.dfuse.io/platform/dfuse-cloud/authentication/#obtaining-a-short-lived-jwt) section of our docs for details.
+请参阅我们的[访问权验证文档](https://docs.dfuse.io/platform/dfuse-cloud/authentication/#obtaining-a-short-lived-jwt) 
 
-Take inspiration from the `main.go` file in this repository.
+可以拿此库中的 `main.go` 文件来做一些向导
 
 
-## Sample output
+## 输出示例
 
-Here is a short peek into some output. Read [**a full sample output here**](./sample_output_block_11740433.json).
+这是 StreamingFast 输出的简要节选，你也可以查看[**完整的输出示例**](./sample_output_block_11740433.json).
 
 ```jsonnet
 {
-  // Indicator that this is a new block, could be IRREVERSIBLE or UNDO
+  // 示意这是一个新区块，可能是 IRREVERSIBLE（不可逆）或 UNDO（回滚）
   "step": "STEP_NEW",
 
-  // Use this to continue *exactly* where you left off, guaranteeing linearity of your streaming
-  // processes.
+  // 使用此字段可以*精确地*从断点续传，确保无缝的直线性流式传输
   "cursor": "PWxQqpUKpA64sLwiUK9I7aWwLpcyB1toUQvhKRJLhY2goSHD1JryAGZ8YE-DmKukiRToGFOljdvOFix7-8ZWuIPrkr426CMxTy95woDt-73mefKhPFsfc-9hVuqJatLbUQ=="
 
-  // Obtain block-level information, filtered to keep only the transactions
-  // that matched your filtering criterias.
+  // 获取区块级信息，按照你所设定的条件对交易进行过滤
   "block": {
     "hash": "06fac697d0798bc82dd13c99c432b09664b1a6b5299dea9309911c5a42d39078",
     "number": "11740433",
@@ -103,8 +101,7 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
       "hash": "06fac697d0798bc82dd13c99c432b09664b1a6b5299dea9309911c5a42d39078"
     },
 
-    // Execution traces of matching transactions, along withj
-    // LOTS of data and details.
+    // 过滤出的交易的执行痕迹，还有丰富的数据和细节信息
     "transactionTraces": [
       {
         "hash": "3ef815c7b531ca2c9da824bc9daa322edbc1ae7ba99548f2498d7ecc4279b934",
@@ -122,7 +119,7 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
         },
         "calls": [
 
-          // This is where it gets interesting:
+          // 到这就开始更有意思了
 
           {
             "index": 1,
@@ -133,15 +130,14 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
             "gasLimit": "476928",
             "gasConsumed": "128974",
 
-            // You get return data between each calls
+            // 你会在每个调用间都获取到反馈数据
             "returnData": "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000130feb5cd4e3ad00000000000000000000000000000000000000000000000000001bf019b3165faeed7",
 
-            // You're also privy to the input that was given to each call in the callgraph.
+            // 还能获取到调用表中每个调用的输入
             "input": "18cbafe5000000000000000000000000000000000000000000000130feb5cd4e3ad00000000000000000000000000000000000000000000000000001bec863b0fd5a700000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160000000000000000000000000000000000000000000000000000000006011e28b00000000000000000000000000000000000000000000000000000000000000020000000000000000000000006b3595068778dd592e39a122f4f5a5cf09c90fe2000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             "executedCode": true,
 
-            // You can observe all the internal ETH transfers, and their
-            // previous and next balance.  Can't do that anywhere else!
+            // 可以看到所有内部 ETH 转账，以及转账前后的余额，这个功能只有 StreamingFast 才提供
 
             "balanceChanges": [
               {
@@ -167,7 +163,7 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
               }
             ],
 
-            // Self explanatory I guess, but pretty useful to avoid calling nodes all the time.
+            // 很明显，避免轮询节点还是非常有用的
 
             "nonceChanges": [
               {
@@ -196,8 +192,7 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
 
             ],
 
-            // These allow you to rebuild a full graph of consumption and trace
-            // gas consumption even between EVM calls
+            // 这个让你可以重构完整的 gas 消耗量和痕迹图表，甚至能看到两个 EVM 调用之间消耗的 gas
             "gasEvents": [
               {
                 "id": "ID_BEFORE_CALL",
@@ -215,20 +210,19 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
             ]
           },
 
-          // The following call is an internal transaction, a call initiated by the previous
-          // one.
+          // 下面你看到的这个调用是个内部交易，是由上一个调用发起的
 
           {
-            // 1-based index of the call within the transaction.
+            // 对交易中调用基于1的索引
             "index": 2,
 
-            // This is a 1-based index, where the value 0 would mean "no parent", or top-level
+            // 在基于1的索引中，0 代表没有母操作，或者说是在最顶层的
             "parentIndex": 1,
 
-            // Can easily represent the call tree with depth
+            // 可以轻松但深度的理解调用间的顺序
             "depth": 1,
 
-            // This is a static call, mostly to get data out of the other contract.
+            // 这是一个静态调用，主要是为了从其他合约中获取数据
             "callType": "STATIC",
             "caller": "d9e1ce17f2641f24ae83637ab66a2cca9c378b9f",
             "address": "795065dcc9f64b5614c407a6efdc400da6221fb0",
@@ -236,13 +230,13 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
             "gasLimit": "465794",
             "gasConsumed": "1217",
 
-            // Also useful to debug or understand what's happening
+            // 可以用来 debug 或了解正在发生的情况
             "returnData": "0000000000000000000000000000000000000000000f2484783460e8ff44c235000000000000000000000000000000000000000000001644567a439aadc9a3ea000000000000000000000000000000000000000000000000000000006011e1b4",
             "input": "0902f1ac",
             "executedCode": true
           },
 
-          // Seems we made a third call here:
+          // 看来这还触发了第三个调用：
 
           {
             "index": 3,
@@ -257,22 +251,22 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
                 "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
                 "topics": [
 
-                  // Yes, that's an ERC-20 transfer
+                  // 这是一个 ERC-20 转账
 
                   "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
 
-                  // From address
+                  // 来自地址：
 
                   "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160",
 
-                  // To address
+                  // 接收地址：
                   "000000000000000000000000795065dcc9f64b5614c407a6efdc400da6221fb0"
                 ],
 
-                // And the amount is in here:
+                // 转账数量:
                 "data": "000000000000000000000000000000000000000000000130feb5cd4e3ad00000",
 
-                // This is the index of this log event within the whole block.
+                // 这是对此日志事件在整个区块中的一个索引
 
                 "blockIndex": 5
               },
@@ -289,8 +283,7 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
               }
             ]
 
-            // This should be helpful: you get the BALANCES (previous and next) for the
-            // updated ERC-20 accounts.  This avoids hundreds of `getBalance()` calls afterward.
+            // 下面这个数据是非常实用的：直接获取 ERC-20 账号更新前后的余额，省去你之后去做好几百个 `getBalance()` 调用。
 
             "erc20BalanceChanges": [
               {
@@ -312,24 +305,23 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
               }
             ]
 
-            // You can use this data to reverse the changes to the storage below
-            // and understand which Externally Owned Address's balance is being
-            // modified.. Avoid costly, and difficult to sync `getBalance()`
-            // eth_calls, by using the State directly (see below)
+            // 你可以利用这个数据来撤消对下面的存储的更改
+            // 并了解是哪个外部地址的余额在被更改，省去成本高、
+            // 很难同步的 `getBalance()` eth_calls，直接利用状态信息
 
             "keccakPreimages": {
               "0490a33f730091720d4c0d29bd2bf6a18ca8c44a423a64002ff24115dd8b8381": "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a1600000000000000000000000000000000000000000000000000000000000000001",
 
-              // Take note of this one, and read below:
+              // 注意下这个数据，以及它下面的解释：
 
               "a60c07f2aed92cf0e2ca94448542cb8f5cc91bf932d411877ec1850bf66a155f": "000000000000000000000000795065dcc9f64b5614c407a6efdc400da6221fb00000000000000000000000000000000000000000000000000000000000000000",
               "b995e795ef3cc8a80fd42d092cd13c326fe2a42885cee30593e77e4b404db0e3": "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a1600000000000000000000000000000000000000000000000000000000000000000",
               "d7e11f80431dbe8f8fe4aba8c8c50b6b80718ea5764ac29e9b9b6e5b537bc944": "000000000000000000000000d9e1ce17f2641f24ae83637ab66a2cca9c378b9f0490a33f730091720d4c0d29bd2bf6a18ca8c44a423a64002ff24115dd8b8381"
             },
 
-            // These are the *actual* values that are modified by the contract, with their balances.
-            // What you usually only found on Etherscan can now be used by your algorithms
-            // and apps, to speed up things and make things more consistent.
+            // 这些是*真正*被合约更改了的值，和它们的余额
+            // 通常只能在 Etherscan 找到的数据，现在你也能在你的算法或应用里用上了
+            // 让你的程序更快、同步性更强
 
             "storageChanges": [
               {
@@ -341,12 +333,10 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
               {
                 "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
 
-                // Noticed that the `keccakPreimages` above has data associated with the key
-                // that follows (a60c07...)?
-                // It happens to hold the address of the user's balance we're changing here:
+                // 你有没有注意到上面的 `keccakPreimages` 是有跟随 (a60c07...) 这个私钥的相关的数据的？
+                // 它恰好有我们更改了余额的地址：
                 //   0x795065dcc9f64b5614c407a6efdc400da6221fb
-                // Without the keccakPreimages, those state changes are admittedly pretty
-                // opaque :)
+                // 如果你看不到 keccakPreimages 的数据，这些状态变化是很不透明的
 
                 "key": "a60c07f2aed92cf0e2ca94448542cb8f5cc91bf932d411877ec1850bf66a155f",
                 "oldValue": "0000000000000000000000000000000000000000000f2484783460e8ff44c235",
@@ -364,8 +354,7 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
       }
     ],
 
-    // These are transaction-level balance changes (not caused by an EVM Call):
-
+    // 下面这是在交易层级的余额变化（非 EVM 调用所出发的变化）：
     "balanceChanges": [
       {
         "address": "ea674fdde714fd979de3edf0f56aa9716b898ec8",
@@ -381,33 +370,30 @@ Here is a short peek into some output. Read [**a full sample output here**](./sa
 ```
 
 
-## Query language
+## 查询语言
 
-The language used as the search query is a _Common Expression
-Language_ expression, as defined here:
+这里的过滤查询所用到的语言是一个 _Common Expression
+Language_ ，可以在这里看到它的定义:
 
 https://github.com/google/cel-spec/blob/master/doc/langdef.md
 
-Queries match on individual CALLs (so called _internal transactions_
-are matched individually), and any transaction with at least one
-matching Call will be returned.
+查询发出后是会去对每个调用进行匹配的（对_内部交易_是单独匹配的），只要一个
+交易中有一个与查询条件匹配的调用，这个交易就会被反馈给你
 
-Fields available for filtering:
+用于过滤的字段：
 
-* **`from`**: _string_, signer or originator of the Call
-* **`to`**: _string_, target contract or address of the Call
-* **`nonce`**: _number_, the name of the action being executed
-* **`input`**: _string_, "0x"-prefixed hex of the input; the string will be empty if input is empty.
-* **`gas_price_gwei`**: _number_, gas price for the transaction, in GWEI.
-* **`gas_limit`**: _number_, gas limit, in units of computation.
-* **`erc20_from`**: _string_, the `from` field of an ERC20 Transfer; string empty when not an ERC20 Transfer.
-* **`erc20_to`**: _string_, the `to` field of an ERC20 Transfer; string empty when not an ERC20 Transfer.
+* **`from`**: _string_，调用的签署者或发起者
+* **`to`**: _string_，目标合约/调用的地址
+* **`nonce`**: _number_，被执行的操作的名字
+* **`input`**: _string_，以"0x"为前缀的十六进制输入；如果输入是空的，则字符串也是空的
+* **`gas_price_gwei`**: _number_，交易的 gas 价格，单位为 GWEI
+* **`gas_limit`**: _number_，gas 上限，以计算单元为单位
+* **`erc20_from`**: _string_，一个 ERC20 转账的 `from` 字段；如果非 ERC20 转账，则字符串为空
+* **`erc20_to`**: _string_，转账的 `to` 字段；如果非 ERC20 转账，则字符串为空
 
-**NOTE**: all string comparisons of hex characters are in **lower case**, so make sure to normalize your query before sending it.
+**注意**: 十六进制字符的所有字符串比较均要求英文“小写”表示，请确保在发送查询之前对其进行规范
 
-
-
-## Sample queries
+## 查询示例
 
 ```
 to == '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
@@ -416,6 +402,6 @@ to == '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
 
 
 
-## License
+## 证书
 
 [Apache 2.0](./LICENSE)
