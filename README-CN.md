@@ -1,4 +1,4 @@
-[Englihs Version](./README.md)
+[English Version](./README.md)
 
 Streaming Fast on Ethereum
 --------------------------
