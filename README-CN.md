@@ -31,25 +31,25 @@ https://streamingfast.io/
 ```bash
 $ export STREAMINGFAST_API_KEY="server_......................"
 
-# Watch all calls to the UniswapV2 Router, for a single block and close
+# 查看所有对 UniswapV2 路由的调用，查询区间为一个区块
 $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
-# Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
+# 查看所有对 UniswapV2 路由的调用，查询区间为前100个区块，并继续实时监听
 $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 
-# Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
+# 从上次的断电续连，利用最新的 cursor 定位，获取所有分叉的提示（UNDO, IRREVERSIBLE）并继续实时监听
 $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 
-# Look at ALL blocks in a given range on Binance Smart Chain (BSC)
+# 查看币安智能链（BSC）上一个指定区间的所有区块 
 $ sf --bsc "true" 100000 100002
 
-# Look at ALL blocks in a given range on Polygon Chain
+# 查看 Polygon 上一个指定区间的所有区块
 $ sf --polygon "true" 100000 100002
 
-# Look at ALL blocks in a given range on Huobi ECO Chain
+# 查看 HECO 上一个指定区间的所有区块
 $ sf --heco "true" 100000 100002
 
-# Look at recent blocks and stream forever on Fantom Opera Mainnet
+# 查看 Fantom Opera 主网上一个指定区间的所有区块
 $ sf --fantom "true" -5
 ```
 
@@ -228,7 +228,7 @@ $ sf --fantom "true" -5
             "gasLimit": "465794",
             "gasConsumed": "1217",
 
-            // Also useful to debug or understand what's happening 可以用来 debug 或了解正在发生的情况
+            // 可以用来 debug 或了解正在发生的情况
             "returnData": "0000000000000000000000000000000000000000000f2484783460e8ff44c235000000000000000000000000000000000000000000001644567a439aadc9a3ea000000000000000000000000000000000000000000000000000000006011e1b4",
             "input": "0902f1ac",
             "executedCode": true
@@ -249,22 +249,22 @@ $ sf --fantom "true" -5
                 "address": "6b3595068778dd592e39a122f4f5a5cf09c90fe2",
                 "topics": [
 
-                  // Yes, that's an ERC-20 transfer
+                  // 这是一个 ERC-20 转账
 
                   "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
 
-                  // From address
+                  // 来自地址：
 
                   "000000000000000000000000ac844b604d6c600fbe55c4383a6d87920b46a160",
 
-                  // To address
+                  // 接收地址：
                   "000000000000000000000000795065dcc9f64b5614c407a6efdc400da6221fb0"
                 ],
 
-                // And the amount is in here:
+                // 转账数量:
                 "data": "000000000000000000000000000000000000000000000130feb5cd4e3ad00000",
 
-                // This is the index of this log event within the whole block.
+                // 这是对此日志事件在整个区块中的一个索引
 
                 "blockIndex": 5
               },
