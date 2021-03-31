@@ -9,6 +9,7 @@ https://streamingfast.io/
 
 **Impressed? Star the repo!**
 
+[查看中文版](./README-CN.md)
 
 ## Getting started
 
