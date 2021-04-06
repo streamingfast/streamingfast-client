@@ -33,14 +33,17 @@ https://streamingfast.io/
 ```bash
 $ export STREAMINGFAST_API_KEY="server_......................"
 
-# 查看所有对 UniswapV2 路由的调用，查询区间为一个区块
-$ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
+# 记录所有对 UNI token 调用的地址，查询区间为一个区块, 将结果记录到 address.txt
+./sf -o address.txt "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']" 12048598 12076262
 
-# 查看所有对 UniswapV2 路由的调用，查询区间为前100个区块，并继续实时监听
-$ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
+# 查看所有对 UNI token 调用，查询区间为一个区块
+$ sf "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']" 11700000 11700001
+
+# 查看所有对 UNI token 调用，查询区间为前100个区块，并继续实时监听
+$ sf "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']" -100
 
 # 从上次的断电续连，利用最新的 cursor 定位，获取所有分叉的提示（UNDO, IRREVERSIBLE）并继续实时监听
-$ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+$ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']"
 ```
 
 ## 编程语言及访问

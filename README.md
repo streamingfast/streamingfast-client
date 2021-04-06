@@ -33,11 +33,14 @@ or download a statically linked [binary for Windows, macOS or Linux](https://git
 ```bash
 $ export STREAMINGFAST_API_KEY="server_......................"
 
-# Watch all calls to the UniswapV2 Router, for a single block and close
-$ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
+# Watch all addresses called to the UNI Token, for a single block and close, save a addresses in address.txt
+./sf -o address.txt "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']" 12048598 1207626
 
-# Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
-$ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
+# Watch all addresses to the UNI Token, for a single block and close
+$ sf "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']" 11700000 11700001
+
+# Watch all addresses to the UNI Token, include the last 100 blocks, and stream forever
+$ sf "to in ['0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984']" -100
 
 # Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
 $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
