@@ -9,7 +9,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +16,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	dfuse "github.com/dfuse-io/client-go"
 	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/logging"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/ptypes"
@@ -44,7 +44,7 @@ var flagFantom = flag.Bool("fantom", false, "When set, will force the endpoint t
 
 var flagHandleForks = flag.Bool("handle-forks", false, "Request notifications type STEP_UNDO when a block was forked out, and STEP_IRREVERSIBLE after a block has seen enough confirmations (200)")
 var flagSkipVerify = flag.Bool("s", false, "When set, skips certification verification")
-var flagWrite = flag.String("o", "-", "When set, write each address as one line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
+var flagWrite = flag.String("o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 var flagStartCursor = flag.String("start-cursor", "", "Last cursor used to continue where you left off")
 
 func main() {
@@ -55,8 +55,6 @@ func main() {
 	ensure(noMoreThanOneTrue(*flagBSC, *flagPolygon, *flagHECO, *flagFantom), errorUsage("Cannot set more than one network flag (ex: --polygon, --bsc)"))
 
 	filter := args[0]
-	trackedAddresses := getFilterAddresses(filter)
-
 	cursor := *flagStartCursor
 	var brange blockRange
 	if cursor == "" {
@@ -97,7 +95,7 @@ func main() {
 
 	stats := newStats()
 	nextStatus := time.Now().Add(statusFrequency)
-	writer, closer := addressWriter(brange)
+	writer, closer := blockWriter(brange)
 	defer closer()
 
 	lastBlockRef := bstream.BlockRefEmpty
@@ -124,7 +122,6 @@ stream:
 		}, grpc.PerRPCCredentials(credentials))
 		noError(err, "unable to start blocks stream")
 
-		airdropAddresses := make(map[string]bool)
 		for {
 			zlog.Debug("Waiting for message to reach us")
 			response, err := stream.Recv()
@@ -142,13 +139,6 @@ stream:
 			err = ptypes.UnmarshalAny(response.Block, block)
 			noError(err, "should have been able to unmarshal received block payload")
 
-			// trace all history address
-			dropAddresses := make([]string, 0)
-			for _, trxTrace := range block.TransactionTraces {
-				newAddresses := notifyTransactionSeen(block, trxTrace, trackedAddresses, airdropAddresses)
-				dropAddresses = append(dropAddresses, newAddresses...)
-			}
-
 			cursor = response.Cursor
 			lastBlockRef = block.AsRef()
 
@@ -163,7 +153,7 @@ stream:
 			}
 
 			if writer != nil {
-				writeAddress(writer, dropAddresses, block)
+				writeBlock(writer, response, block)
 			}
 
 			stats.recordBlock(int64(response.XXX_Size()))
@@ -188,50 +178,6 @@ stream:
 	printf("Bytes received: %s\n", stats.bytesReceived.Overall(elapsed))
 }
 
-func notifyTransactionSeen(block *pbcodec.Block, trxTrace *pbcodec.TransactionTrace, trackedAddresses []string, airdropAddresses map[string]bool) []string {
-	// fmt.Printf("Matching transaction %[1]s in block #%d (Links https://ethq.app/tx/%[1]s ,https://etherscan.io/tx/%[1]s)\n", hash(trxTrace.Hash).Pretty(), block.Number)
-	trackedSet := addressSet(trackedAddresses)
-	newAddresses := make([]string, 0)
-	for _, call := range trxTrace.Calls {
-
-		callToTracked := address(call.Address).Pretty() // lowercase
-		if !trackedSet.contains(callToTracked) {
-			continue
-		}
-
-		if call.Erc20TransferEvents != nil {
-			for i := 0; i < len(call.Erc20TransferEvents); i++ {
-				from := address(call.Erc20TransferEvents[i].From).Pretty()
-				to := address(call.Erc20TransferEvents[i].To).Pretty()
-
-				if !airdropAddresses[from] && from != "0x0000000000000000000000000000000000000000" {
-					newAddresses = append(newAddresses, from)
-					airdropAddresses[from] = true
-				}
-				if !airdropAddresses[to] && to != "0x0000000000000000000000000000000000000000" {
-					newAddresses = append(newAddresses, to)
-					airdropAddresses[to] = true
-				}
-
-			}
-		}
-	}
-	return newAddresses
-}
-
-func getFilterAddresses(filter string) []string {
-	filterAddress := make([]string, 0)
-	if filter != "" {
-		re := regexp.MustCompile("in \\[(.*?)\\]")
-		match := re.FindStringSubmatch(filter)
-
-		for i := 1; i < len(match); i++ {
-			filterAddress = append(filterAddress, strings.Trim(match[i], "'"))
-		}
-	}
-	return filterAddress
-}
-
 func noMoreThanOneTrue(bools ...bool) bool {
 	var seen bool
 	for _, b := range bools {
@@ -247,18 +193,18 @@ func noMoreThanOneTrue(bools ...bool) bool {
 
 var endOfLine = []byte("\n")
 
-func writeAddress(writer io.Writer, addresses []string, block *pbcodec.Block) {
+func writeBlock(writer io.Writer, response *pbbstream.BlockResponseV2, block *pbcodec.Block) {
+	line, err := jsonpb.MarshalToString(response)
+	noError(err, "unable to marshal block %s to JSON", block.AsRef())
 
-	for _, address := range addresses {
-		_, err := writer.Write([]byte(address))
-		noError(err, "unable to write address %s line (%s)", block.AsRef(), address)
+	_, err = writer.Write([]byte(line))
+	noError(err, "unable to write block %s line to JSON", block.AsRef())
 
-		_, err = writer.Write(endOfLine)
-		noError(err, "unable to write address %s line ending", block.AsRef())
-	}
+	_, err = writer.Write(endOfLine)
+	noError(err, "unable to write block %s line ending", block.AsRef())
 }
 
-func addressWriter(bRange blockRange) (io.Writer, func()) {
+func blockWriter(bRange blockRange) (io.Writer, func()) {
 	if flagWrite == nil || strings.TrimSpace(*flagWrite) == "" {
 		return nil, func() {}
 	}
