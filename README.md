@@ -53,6 +53,9 @@ $ sf --heco "true" 100000 100002
 
 # Look at recent blocks and stream forever on Fantom Opera Mainnet
 $ sf --fantom "true" -5
+
+# Look at recent blocks and stream forever on xDai Mainnet
+$ sf --xdai "true" -5
 ```
 
 ## Programmatic access
