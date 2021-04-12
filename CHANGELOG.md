@@ -7,6 +7,10 @@ project adheres to
 [MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
 date.
 
+# v0.0.7
+
+Added --xdai endpoint
+
 # v0.0.6
 
 Added --fantom endpoint
