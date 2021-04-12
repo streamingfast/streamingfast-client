@@ -176,7 +176,7 @@ $ sf --fantom "true" -5
               {
                 "oldValue": "500000",
                 "newValue": "476928",
-                // You've got all the reasons why gas is charged or refunded
+                // 可以看到所有 gas 消耗和退回的原因
                 "reason": "REASON_INTRINSIC_GAS"
               },
               {
