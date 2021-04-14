@@ -137,26 +137,26 @@ stream:
 				break
 			}
 
-			zlog.Debug("Decoding received message's block")
-			block := &pbcodec.Block{}
-			err = ptypes.UnmarshalAny(response.Block, block)
-			noError(err, "should have been able to unmarshal received block payload")
-
 			cursor = response.Cursor
-			lastBlockRef = block.AsRef()
 
-			if traceEnabled {
-				zlog.Debug("Block received", zap.Stringer("block", lastBlockRef), zap.Stringer("previous", bstream.NewBlockRefFromID(block.PreviousID())), zap.String("cursor", cursor))
+			if writer != nil {
+				zlog.Debug("Decoding received message's block")
+				block := &pbcodec.Block{}
+				err = ptypes.UnmarshalAny(response.Block, block)
+				noError(err, "should have been able to unmarshal received block payload")
+
+				lastBlockRef = block.AsRef()
+
+				if traceEnabled {
+					zlog.Debug("Block received", zap.Stringer("block", lastBlockRef), zap.Stringer("previous", bstream.NewBlockRefFromID(block.PreviousID())), zap.String("cursor", cursor))
+				}
+				writeBlock(writer, response, block)
 			}
 
 			now := time.Now()
 			if now.After(nextStatus) {
 				zlog.Info("Stream blocks progress", zap.Object("stats", stats))
 				nextStatus = now.Add(statusFrequency)
-			}
-
-			if writer != nil {
-				writeBlock(writer, response, block)
 			}
 
 			stats.recordBlock(int64(response.XXX_Size()))
