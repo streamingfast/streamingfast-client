@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 )
 
 func (b *Block) ID() string {

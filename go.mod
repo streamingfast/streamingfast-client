@@ -13,7 +13,6 @@ require (
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68 // indirect
 	github.com/dfuse-io/dstore v0.1.1-0.20201119200905-a19d004b7763 // indirect
 	github.com/dfuse-io/dtracing v0.0.0-20200417142406-03c4cd5a6beb // indirect
-	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70
 	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
 	github.com/golang/protobuf v1.4.3
@@ -27,6 +26,7 @@ require (
 	github.com/prometheus/client_model v0.1.0 // indirect
 	github.com/rs/xid v1.2.1 // indirect
 	github.com/streamingfast/dgrpc v0.0.0-20210810185305-905172f728e8 // indirect
+	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 // indirect
 	github.com/streamingfast/shutter v1.5.0 // indirect
 	github.com/tidwall/gjson v1.5.0 // indirect
 	go.opencensus.io v0.22.5 // indirect

@@ -16,7 +16,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	dfuse "github.com/dfuse-io/client-go"
 	"github.com/streamingfast/dgrpc"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 	"github.com/dfuse-io/logging"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/ptypes"

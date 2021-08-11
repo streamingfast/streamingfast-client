@@ -117,8 +117,6 @@ github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125 h1:XvwJj/xDY0TQV
 github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/dtracing v0.0.0-20200417142406-03c4cd5a6beb h1:95WMpscZunRzCAzhyKmvtFbeDos7ULoWdLA4cY8dyAA=
 github.com/dfuse-io/dtracing v0.0.0-20200417142406-03c4cd5a6beb/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
-github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
-github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d h1:2To2h29weJvChciTMa3/2Pb4ezXR8KbpRamU3Gw+A7E=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
@@ -334,6 +332,10 @@ github.com/streamingfast/dstore v0.1.1-0.20210810110932-928f221474e4 h1:zDzSLuih
 github.com/streamingfast/dstore v0.1.1-0.20210810110932-928f221474e4/go.mod h1:RZSfjj0Odw2Apdm1VsNLIpTC2Ure3sh9Jtpt+Ks8Zuc=
 github.com/streamingfast/dtracing v0.0.0-20210810035915-473055fed32a h1:f2z0hl0EzhIkzErTPGf6ntF1kdOUZTWAz/DajsTgu9s=
 github.com/streamingfast/dtracing v0.0.0-20210810035915-473055fed32a/go.mod h1:z8WI8Y2sVfFZQQewUC40hE3TgISt3K4n5RwKzXG65Pg=
+github.com/streamingfast/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
+github.com/streamingfast/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
+github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 h1:g8eEYbFSykyzIyuxNMmHEUGGUvJE0ivmqZagLDK42gw=
+github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0/go.mod h1:cTNObq2Uofb330y05JbbZZ6RwE6QUXw5iVcHk1Fx3fk=
 github.com/streamingfast/opaque v0.0.0-20210809210154-b964592beb5d/go.mod h1:TiogU5+Boyfq0oyvLUd6jy5kAsEZP6r1590Z8IFPhMg=
 github.com/streamingfast/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=
 github.com/streamingfast/shutter v1.4.1 h1:a0HSmmu8vYxR4ynIv1+tH49jrv7gyenNtOJBsmm3OHA=
