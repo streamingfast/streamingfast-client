@@ -159,7 +159,7 @@ stream:
 			}
 
 			if writer != nil {
-				writeBlock(writer, block)
+				writeBlock(writer, response, block)
 			}
 
 			stats.recordBlock(int64(response.XXX_Size()))
@@ -199,8 +199,8 @@ func noMoreThanOneTrue(bools ...bool) bool {
 
 var endOfLine = []byte("\n")
 
-func writeBlock(writer io.Writer, block *pbcodec.Block) {
-	line, err := jsonpb.MarshalToString(block)
+func writeBlock(writer io.Writer, response *pbbstream.BlockResponseV2, block *pbcodec.Block) {
+	line, err := jsonpb.MarshalToString(response)
 	noError(err, "unable to marshal block %s to JSON", block.AsRef())
 
 	_, err = writer.Write([]byte(line))
