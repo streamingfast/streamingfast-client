@@ -42,7 +42,7 @@ $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 # 从上次的断电续连，利用最新的 cursor 定位，获取所有分叉的提示（UNDO, IRREVERSIBLE）并继续实时监听
 $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 
-# 查看币安智能链（BSC）上一个指定区间的所有区块 
+# 查看币安智能链（BSC）上一个指定区间的所有区块
 $ sf --bsc "true" 100000 100002
 
 # 查看 Polygon 上一个指定区间的所有区块
@@ -59,9 +59,9 @@ $ sf --fantom "true" -5
 
 通过 [gRPC](https://grpc.io/) 提供对超过十几种编程语言的支持。
 
-你需要两个 protobuf 定义文件：[bstream.proto](https://github.com/dfuse-io/proto/tree/develop/dfuse/bstream/v1) 以及 [codec.proto](https://github.com/dfuse-io/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1)。
+你需要两个 protobuf 定义文件：[bstream.proto](https://github.com/streamingfast/proto/tree/develop/dfuse/bstream/v1) 以及 [codec.proto](https://github.com/streamingfast/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1)。
 
-请参阅我们的[访问权验证文档](https://docs.dfuse.io/platform/dfuse-cloud/authentication/#obtaining-a-short-lived-jwt) 
+请参阅我们的[访问权验证文档](https://docs.dfuse.io/platform/dfuse-cloud/authentication/#obtaining-a-short-lived-jwt)
 
 可以拿此库中的 `main.go` 文件来做一些向导
 

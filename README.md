@@ -62,7 +62,7 @@ $ sf --xdai "true" -5
 
 Access is done through [gRPC](https://grpc.io/), supporting more than a dozen popular languages.
 
-You will need those two protobuf definition files: [bstream.proto](https://github.com/dfuse-io/proto/tree/develop/dfuse/bstream/v1) and [codec.proto](https://github.com/dfuse-io/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1).
+You will need those two protobuf definition files: [bstream.proto](https://github.com/streamingfast/proto/tree/develop/dfuse/bstream/v1) and [codec.proto](https://github.com/streamingfast/proto-ethereum/tree/develop/dfuse/ethereum/codec/v1).
 
 Refer to the [Authentication](https://docs.dfuse.io/platform/dfuse-cloud/authentication/#obtaining-a-short-lived-jwt) section of our docs for details.
 

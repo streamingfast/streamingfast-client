@@ -13,14 +13,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	dfuse "github.com/dfuse-io/client-go"
-	"github.com/streamingfast/dgrpc"
-	"github.com/streamingfast/jsonpb"
-	"github.com/dfuse-io/logging"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/paulbellamy/ratecounter"
+	"github.com/streamingfast/bstream"
+	dfuse "github.com/streamingfast/client-go"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/jsonpb"
+	"github.com/streamingfast/logging"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/dfuse/ethereum/codec/v1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -32,11 +32,8 @@ import (
 
 var retryDelay = 5 * time.Second
 var statusFrequency = 15 * time.Second
-var traceEnabled = logging.IsTraceEnabled("consumer", "github.com/streamingfast/streamingfast-client")
-var zlog = logging.NewSimpleLogger("consumer", "github.com/streamingfast/streamingfast-client")
 
 var flagEndpoint = flag.String("e", "api.streamingfast.io:443", "The endpoint to connect the stream of blocks to")
-
 var flagBSC = flag.Bool("bsc", false, "When set, will force the endpoint to Binance Smart Chain")
 var flagPolygon = flag.Bool("polygon", false, "When set, will force the endpoint to Polygon (previously Matic)")
 var flagHECO = flag.Bool("heco", false, "When set, will force the endpoint to Huobi Eco Chain")
@@ -47,6 +44,9 @@ var flagHandleForks = flag.Bool("handle-forks", false, "Request notifications ty
 var flagSkipVerify = flag.Bool("s", false, "When set, skips certification verification")
 var flagWrite = flag.String("o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 var flagStartCursor = flag.String("start-cursor", "", "Last cursor used to continue where you left off")
+
+var zlog = zap.NewNop()
+var tracing = logging.ApplicationLogger("sf", "github.com/streamingfast/streamingfast-client", &zlog)
 
 func main() {
 	setupFlag()
@@ -67,9 +67,6 @@ func main() {
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
 
-	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
-	ensure(apiKey != "", errorUsage("the environment variable STREAMINGFAST_API_KEY must be set to a valid streamingfast API key value"))
-
 	endpoint := *flagEndpoint
 	switch {
 	case *flagBSC:
@@ -88,7 +85,13 @@ func main() {
 		}
 	}
 
-	dfuse, err := dfuse.NewClient("api.streamingfast.io", apiKey)
+	var clientOptions []dfuse.ClientOption
+	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
+	if apiKey == "" {
+		clientOptions = []dfuse.ClientOption{dfuse.WithoutAuthentication()}
+	}
+
+	dfuse, err := dfuse.NewClient(endpoint, apiKey, clientOptions...)
 	noError(err, "unable to create streamingfast client")
 
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
@@ -145,7 +148,7 @@ stream:
 			cursor = response.Cursor
 			lastBlockRef = block.AsRef()
 
-			if traceEnabled {
+			if tracing.Enabled() {
 				zlog.Debug("Block received", zap.Stringer("block", lastBlockRef), zap.Stringer("previous", bstream.NewBlockRefFromID(block.PreviousID())), zap.String("cursor", cursor))
 			}
 
@@ -156,7 +159,7 @@ stream:
 			}
 
 			if writer != nil {
-				writeBlock(writer, response, block)
+				writeBlock(writer, block)
 			}
 
 			stats.recordBlock(int64(response.XXX_Size()))
@@ -196,8 +199,8 @@ func noMoreThanOneTrue(bools ...bool) bool {
 
 var endOfLine = []byte("\n")
 
-func writeBlock(writer io.Writer, response *pbbstream.BlockResponseV2, block *pbcodec.Block) {
-	line, err := jsonpb.MarshalToString(response)
+func writeBlock(writer io.Writer, block *pbcodec.Block) {
+	line, err := jsonpb.MarshalToString(block)
 	noError(err, "unable to marshal block %s to JSON", block.AsRef())
 
 	_, err = writer.Write([]byte(line))
@@ -299,6 +302,9 @@ Connects to StreamingFast endpoint using the STREAMINGFAST_API_KEY from
 environment variables and stream back blocks filterted using the <filter>
 argument within the <start_block> and <end_block> if they are specified.
 
+If STREAMINGFAST_API_KEY environment is not set, only unauthenticated network
+will be connectable to, authenticated network will refuse the connection.
+
 Parameters:
   <filter>        A valid CEL filter expression for the Ethereum network, only
                   transactions matching the filter will be returned to you.
@@ -328,7 +334,7 @@ Examples:
 
   # Look at ALL blocks in a given range on Polygon Chain
   $ sf --polygon "true" 100000 100002
-  
+
   # Look at ALL blocks in a given range on Huobi ECO Chain
   $ sf --heco "true" 100000 100002
 

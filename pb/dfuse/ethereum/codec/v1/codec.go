@@ -3,7 +3,7 @@ package pbcodec
 import (
 	"encoding/hex"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/jsonpb"
 )
 
