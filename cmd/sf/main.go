@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/paulbellamy/ratecounter"
 	"github.com/streamingfast/bstream"
@@ -20,8 +21,8 @@ import (
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/jsonpb"
 	"github.com/streamingfast/logging"
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
-	pbcodec "github.com/streamingfast/streamingfast-client/pb/dfuse/ethereum/codec/v1"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/oauth2"
@@ -97,7 +98,7 @@ func main() {
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	noError(err, "unable to create external gRPC client")
 
-	streamClient := pbbstream.NewBlockStreamV2Client(conn)
+	streamClient := pbfirehose.NewStreamClient(conn)
 
 	stats := newStats()
 	nextStatus := time.Now().Add(statusFrequency)
@@ -112,19 +113,18 @@ stream:
 		tokenInfo, err := dfuse.GetAPITokenInfo(context.Background())
 		noError(err, "unable to retrieve StreamingFast API token")
 
-		forkSteps := []pbbstream.ForkStep{pbbstream.ForkStep_STEP_NEW}
+		forkSteps := []pbfirehose.ForkStep{pbfirehose.ForkStep_STEP_NEW}
 		if *flagHandleForks {
-			forkSteps = append(forkSteps, pbbstream.ForkStep_STEP_IRREVERSIBLE, pbbstream.ForkStep_STEP_UNDO)
+			forkSteps = append(forkSteps, pbfirehose.ForkStep_STEP_IRREVERSIBLE, pbfirehose.ForkStep_STEP_UNDO)
 		}
 
 		credentials := oauth.NewOauthAccess(&oauth2.Token{AccessToken: tokenInfo.Token, TokenType: "Bearer"})
-		stream, err := streamClient.Blocks(context.Background(), &pbbstream.BlocksRequestV2{
+		stream, err := streamClient.Blocks(context.Background(), &pbfirehose.Request{
 			StartBlockNum:     brange.start,
 			StartCursor:       cursor,
 			StopBlockNum:      brange.end,
 			ForkSteps:         forkSteps,
 			IncludeFilterExpr: filter,
-			Details:           pbbstream.BlockDetails_BLOCK_DETAILS_FULL,
 		}, grpc.PerRPCCredentials(credentials))
 		noError(err, "unable to start blocks stream")
 
@@ -162,7 +162,7 @@ stream:
 				writeBlock(writer, response, block)
 			}
 
-			stats.recordBlock(int64(response.XXX_Size()))
+			stats.recordBlock(int64(proto.Size(block)))
 		}
 
 		time.Sleep(5 * time.Second)
@@ -199,7 +199,7 @@ func noMoreThanOneTrue(bools ...bool) bool {
 
 var endOfLine = []byte("\n")
 
-func writeBlock(writer io.Writer, response *pbbstream.BlockResponseV2, block *pbcodec.Block) {
+func writeBlock(writer io.Writer, response *pbfirehose.Response, block *pbcodec.Block) {
 	line, err := jsonpb.MarshalToString(response)
 	noError(err, "unable to marshal block %s to JSON", block.AsRef())
 
