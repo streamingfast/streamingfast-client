@@ -1,2 +1,2 @@
-generate.sh - Fri Dec 10 12:35:41 EST 2021 - maoueh
-streamingfast/proto-ethereum revision: 7e14559621061ddf5dfd0a39d29f7342a2b63499
+generate.sh - Tue  4 Jan 2022 15:52:04 EST - julien
+streamingfast/proto-ethereum revision: b235b770e0f26f6f19a3de16c145cf0f961d89d6

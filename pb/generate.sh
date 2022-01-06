@@ -26,6 +26,7 @@ function main() {
 
   pushd "$ROOT/pb" &> /dev/null
   generate "sf/ethereum/codec/v1/codec.proto"
+  generate "sf/ethereum/transforms/v1/transforms.proto"
 
   echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
   echo "streamingfast/proto-ethereum revision: `GIT_DIR=$PROTO_ETHEREUM/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt

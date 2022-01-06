@@ -8,9 +8,9 @@ package pbcodec
 
 import (
 	proto "github.com/golang/protobuf/proto"
-	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -880,22 +880,22 @@ type BlockHeader struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ParentHash       []byte               `protobuf:"bytes,1,opt,name=parent_hash,json=parentHash,proto3" json:"parent_hash,omitempty"`                   // geth: ParentHash + parentHash, parity: parentHash
-	UncleHash        []byte               `protobuf:"bytes,2,opt,name=uncle_hash,json=uncleHash,proto3" json:"uncle_hash,omitempty"`                      // geth: sha3Uncles, but sha3 is badly worded, so we prefer `uncle_hash`, parity: uncleHash
-	Coinbase         []byte               `protobuf:"bytes,3,opt,name=coinbase,proto3" json:"coinbase,omitempty"`                                         // geth: Coinbase + miner, parity: coinbase
-	StateRoot        []byte               `protobuf:"bytes,4,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`                      // geth: Root + json=stateRoot, parity: stateRoot
-	TransactionsRoot []byte               `protobuf:"bytes,5,opt,name=transactions_root,json=transactionsRoot,proto3" json:"transactions_root,omitempty"` // geth: TxHash + transactionsRoot, parity: transactionsTrie
-	ReceiptRoot      []byte               `protobuf:"bytes,6,opt,name=receipt_root,json=receiptRoot,proto3" json:"receipt_root,omitempty"`                // geth: ReceiptHash + receiptRoot, parity: receiptTrie
-	LogsBloom        []byte               `protobuf:"bytes,7,opt,name=logs_bloom,json=logsBloom,proto3" json:"logs_bloom,omitempty"`                      // internally called `Bloom`, parity uses `bloom`, geth's json uses `logsBloom`
-	Difficulty       *BigInt              `protobuf:"bytes,8,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
-	Number           uint64               `protobuf:"varint,9,opt,name=number,proto3" json:"number,omitempty"`
-	GasLimit         uint64               `protobuf:"varint,10,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
-	GasUsed          uint64               `protobuf:"varint,11,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
-	Timestamp        *timestamp.Timestamp `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	ExtraData        []byte               `protobuf:"bytes,13,opt,name=extra_data,json=extraData,proto3" json:"extra_data,omitempty"` // geth: Extra []byte + extraData, parity: "0x"-prefixed extraData
-	MixHash          []byte               `protobuf:"bytes,14,opt,name=mix_hash,json=mixHash,proto3" json:"mix_hash,omitempty"`       // geth: MixDigest + mixHash, parity: mixHash
-	Nonce            uint64               `protobuf:"varint,15,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	Hash             []byte               `protobuf:"bytes,16,opt,name=hash,proto3" json:"hash,omitempty"`
+	ParentHash       []byte                 `protobuf:"bytes,1,opt,name=parent_hash,json=parentHash,proto3" json:"parent_hash,omitempty"`                   // geth: ParentHash + parentHash, parity: parentHash
+	UncleHash        []byte                 `protobuf:"bytes,2,opt,name=uncle_hash,json=uncleHash,proto3" json:"uncle_hash,omitempty"`                      // geth: sha3Uncles, but sha3 is badly worded, so we prefer `uncle_hash`, parity: uncleHash
+	Coinbase         []byte                 `protobuf:"bytes,3,opt,name=coinbase,proto3" json:"coinbase,omitempty"`                                         // geth: Coinbase + miner, parity: coinbase
+	StateRoot        []byte                 `protobuf:"bytes,4,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`                      // geth: Root + json=stateRoot, parity: stateRoot
+	TransactionsRoot []byte                 `protobuf:"bytes,5,opt,name=transactions_root,json=transactionsRoot,proto3" json:"transactions_root,omitempty"` // geth: TxHash + transactionsRoot, parity: transactionsTrie
+	ReceiptRoot      []byte                 `protobuf:"bytes,6,opt,name=receipt_root,json=receiptRoot,proto3" json:"receipt_root,omitempty"`                // geth: ReceiptHash + receiptRoot, parity: receiptTrie
+	LogsBloom        []byte                 `protobuf:"bytes,7,opt,name=logs_bloom,json=logsBloom,proto3" json:"logs_bloom,omitempty"`                      // internally called `Bloom`, parity uses `bloom`, geth's json uses `logsBloom`
+	Difficulty       *BigInt                `protobuf:"bytes,8,opt,name=difficulty,proto3" json:"difficulty,omitempty"`
+	Number           uint64                 `protobuf:"varint,9,opt,name=number,proto3" json:"number,omitempty"`
+	GasLimit         uint64                 `protobuf:"varint,10,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
+	GasUsed          uint64                 `protobuf:"varint,11,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
+	Timestamp        *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	ExtraData        []byte                 `protobuf:"bytes,13,opt,name=extra_data,json=extraData,proto3" json:"extra_data,omitempty"` // geth: Extra []byte + extraData, parity: "0x"-prefixed extraData
+	MixHash          []byte                 `protobuf:"bytes,14,opt,name=mix_hash,json=mixHash,proto3" json:"mix_hash,omitempty"`       // geth: MixDigest + mixHash, parity: mixHash
+	Nonce            uint64                 `protobuf:"varint,15,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Hash             []byte                 `protobuf:"bytes,16,opt,name=hash,proto3" json:"hash,omitempty"`
 }
 
 func (x *BlockHeader) Reset() {
@@ -1007,7 +1007,7 @@ func (x *BlockHeader) GetGasUsed() uint64 {
 	return 0
 }
 
-func (x *BlockHeader) GetTimestamp() *timestamp.Timestamp {
+func (x *BlockHeader) GetTimestamp() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -1104,8 +1104,8 @@ type TransactionState struct {
 	Confirmation      uint64                      `protobuf:"varint,6,opt,name=confirmation,proto3" json:"confirmation,omitempty"`
 	HeadBlockHeader   *BlockHeader                `protobuf:"bytes,7,opt,name=head_block_header,json=headBlockHeader,proto3" json:"head_block_header,omitempty"`
 	ReplacedByHash    []byte                      `protobuf:"bytes,8,opt,name=replaced_by_hash,json=replacedByHash,proto3" json:"replaced_by_hash,omitempty"`
-	PendingFirstSeen  *timestamp.Timestamp        `protobuf:"bytes,12,opt,name=pending_first_seen,json=pendingFirstSeen,proto3" json:"pending_first_seen,omitempty"`
-	PendingLastSeen   *timestamp.Timestamp        `protobuf:"bytes,13,opt,name=pending_last_seen,json=pendingLastSeen,proto3" json:"pending_last_seen,omitempty"`
+	PendingFirstSeen  *timestamppb.Timestamp      `protobuf:"bytes,12,opt,name=pending_first_seen,json=pendingFirstSeen,proto3" json:"pending_first_seen,omitempty"`
+	PendingLastSeen   *timestamppb.Timestamp      `protobuf:"bytes,13,opt,name=pending_last_seen,json=pendingLastSeen,proto3" json:"pending_last_seen,omitempty"`
 }
 
 func (x *TransactionState) Reset() {
@@ -1210,14 +1210,14 @@ func (x *TransactionState) GetReplacedByHash() []byte {
 	return nil
 }
 
-func (x *TransactionState) GetPendingFirstSeen() *timestamp.Timestamp {
+func (x *TransactionState) GetPendingFirstSeen() *timestamppb.Timestamp {
 	if x != nil {
 		return x.PendingFirstSeen
 	}
 	return nil
 }
 
-func (x *TransactionState) GetPendingLastSeen() *timestamp.Timestamp {
+func (x *TransactionState) GetPendingLastSeen() *timestamppb.Timestamp {
 	if x != nil {
 		return x.PendingLastSeen
 	}
@@ -3154,7 +3154,7 @@ var file_sf_ethereum_codec_v1_codec_proto_goTypes = []interface{}{
 	(*GasChange)(nil),                    // 27: sf.ethereum.codec.v1.GasChange
 	(*GasEvent)(nil),                     // 28: sf.ethereum.codec.v1.GasEvent
 	nil,                                  // 29: sf.ethereum.codec.v1.Call.KeccakPreimagesEntry
-	(*timestamp.Timestamp)(nil),          // 30: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil),        // 30: google.protobuf.Timestamp
 }
 var file_sf_ethereum_codec_v1_codec_proto_depIdxs = []int32{
 	12, // 0: sf.ethereum.codec.v1.Block.header:type_name -> sf.ethereum.codec.v1.BlockHeader
