@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/streamingfast/bstream"
 	dfuse "github.com/streamingfast/client-go"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
@@ -13,8 +16,6 @@ import (
 	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"io"
-	"time"
 )
 
 var retryDelay = 5 * time.Second
@@ -75,7 +76,7 @@ stream:
 
 		stream, err := config.client.Blocks(context.Background(), request, grpcCallOpts...)
 		if err != nil {
-			fmt.Errorf("unable to start blocks stream: %w", err)
+			return fmt.Errorf("unable to start blocks stream: %w", err)
 		}
 
 		for {

@@ -51,16 +51,14 @@ func checkArgs(cursor string, args []string) (out *Input, err error) {
 		filter: args[0],
 		cursor: cursor,
 	}
-	if cursor == "" {
-		startBlock := args[1]
-		stopBlock := ""
-		if len(args) > 2 {
-			stopBlock = args[2]
-		}
-		out.brange, err = newBlockRange(startBlock, stopBlock)
-		if err != nil {
-			return nil, fmt.Errorf("unable to determined block range: %w", err)
-		}
+	startBlock := args[1]
+	stopBlock := ""
+	if len(args) > 2 {
+		stopBlock = args[2]
+	}
+	out.brange, err = newBlockRange(startBlock, stopBlock)
+	if err != nil {
+		return nil, fmt.Errorf("unable to determined block range: %w", err)
 	}
 	return out, nil
 }
