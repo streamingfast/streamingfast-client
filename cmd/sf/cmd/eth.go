@@ -5,23 +5,28 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/bstream"
 	dfuse "github.com/streamingfast/client-go"
 	"github.com/streamingfast/dgrpc"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
 	pbtransforms "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/transforms/v1"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"os"
+	"strings"
 )
 
 var ethSfCmd = &cobra.Command{
-	Use: "eth [flags] <filter> [<start_block>] [<end_block>]",
+	Use: "eth [flags] [<start_block>] [<end_block>]",
 	Short: `Streaming Fast Ethereum client
-usage: sf eth [flags] <filter> [<start_block>] [<end_block>]
+usage: sf eth [flags] [<start_block>] [<end_block>]
 	`,
 	Long: usage,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.MaximumNArgs(2),
 	RunE: ethSfRunE,
 }
 
@@ -51,10 +56,12 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	xdaiNetwork := viper.GetBool("eth-cmd-xdai")
 	outputFlag := viper.GetString("global-output")
 
+	fmt.Println(strings.Join(args, ", "))
 	inputs, err := checkArgs(startCursor, args)
 	if err != nil {
 		return err
 	}
+	zlog.Debug("arguments", zap.Reflect("args", inputs))
 
 	if !noMoreThanOneTrue(bscNetwork, polygonNetwork, hecoNetwork, fantomNetwork, xdaiNetwork) {
 		return fmt.Errorf("cannot set more than one network flag (ex: --polygon, --bsc)")
@@ -101,7 +108,7 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create external gRPC client")
 	}
 
-	writer, closer, err := blockWriter(inputs.brange, outputFlag)
+	writer, closer, err := blockWriter(inputs.Brange, outputFlag)
 	if err != nil {
 		return fmt.Errorf("unable to setup writer: %w", err)
 	}
@@ -121,14 +128,19 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		dfuseCli:    dfuse,
 		writer:      writer,
 		stats:       newStats(),
-		brange:      inputs.brange,
-		filter:      inputs.filter,
+		brange:      inputs.Brange,
 		cursor:      startCursor,
 		endpoint:    endpoint,
 		handleForks: viper.GetBool("global-handle-forks"),
 		skipAuth:    viper.GetBool("global-skip-auth"),
 		transforms:  transforms,
-	})
+	},
+		func() proto.Message {
+			return &pbcodec.Block{}
+		},
+		func(message proto.Message) bstream.BlockRef {
+			return message.(*pbcodec.Block).AsRef()
+		})
 }
 
 func lightBlockTransform() (*anypb.Any, error) {

@@ -38,25 +38,23 @@ func noMoreThanOneTrue(bools ...bool) bool {
 }
 
 type Input struct {
-	brange blockRange
-	cursor string
-	filter string
+	Brange BlockRange
+	Cursor string
 }
 
 func checkArgs(cursor string, args []string) (out *Input, err error) {
-	if !((len(args) == 1 && cursor != "") || (len(args) > 1)) {
+	if !((len(args) == 0 && cursor != "") || (len(args) > 0)) {
 		return nil, fmt.Errorf("expecting between 1 and 3 arguments")
 	}
 	out = &Input{
-		filter: args[0],
-		cursor: cursor,
+		Cursor: cursor,
 	}
-	startBlock := args[1]
+	startBlock := args[0]
 	stopBlock := ""
-	if len(args) > 2 {
-		stopBlock = args[2]
+	if len(args) > 1 {
+		stopBlock = args[1]
 	}
-	out.brange, err = newBlockRange(startBlock, stopBlock)
+	out.Brange, err = newBlockRange(startBlock, stopBlock)
 	if err != nil {
 		return nil, fmt.Errorf("unable to determined block range: %w", err)
 	}

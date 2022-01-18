@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/paulbellamy/ratecounter"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/jsonpb"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
-	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
 	"go.uber.org/zap/zapcore"
 	"io"
 	"os"
@@ -91,35 +91,35 @@ func (c *counter) Overall(elapsed time.Duration) string {
 	return fmt.Sprintf("%d %s/%s (%d %s total)", uint64(rate), c.unit, "min", c.total, c.unit)
 }
 
-type blockRange struct {
-	start int64
-	end   uint64
+type BlockRange struct {
+	Start int64
+	End   uint64
 }
 
-func newBlockRange(startBlockNum, stopBlockNum string) (blockRange, error) {
+func newBlockRange(startBlockNum, stopBlockNum string) (BlockRange, error) {
 	if !isInt(startBlockNum) {
-		return blockRange{}, fmt.Errorf("the <range> start value %q is not a valid uint64 value", startBlockNum)
+		return BlockRange{}, fmt.Errorf("the <range> start value %q is not a valid uint64 value", startBlockNum)
 	}
-	out := blockRange{}
-	out.start, _ = strconv.ParseInt(startBlockNum, 10, 64)
+	out := BlockRange{}
+	out.Start, _ = strconv.ParseInt(startBlockNum, 10, 64)
 	if stopBlockNum == "" {
 		return out, nil
 	}
 	if !isUint(stopBlockNum) {
-		return blockRange{}, fmt.Errorf("the <range> end value %q is not a valid uint64 value", stopBlockNum)
+		return BlockRange{}, fmt.Errorf("the <range> end value %q is not a valid uint64 value", stopBlockNum)
 	}
-	out.end, _ = strconv.ParseUint(stopBlockNum, 10, 64)
-	if out.start > int64(out.end) {
-		return blockRange{}, fmt.Errorf("the <range> start value %q value comes after end value %q", startBlockNum, stopBlockNum)
+	out.End, _ = strconv.ParseUint(stopBlockNum, 10, 64)
+	if out.Start > int64(out.End) {
+		return BlockRange{}, fmt.Errorf("the <range> start value %q value comes after end value %q", startBlockNum, stopBlockNum)
 	}
 	return out, nil
 }
 
-func (b blockRange) String() string {
-	return fmt.Sprintf("%d - %d", b.start, b.end)
+func (b BlockRange) String() string {
+	return fmt.Sprintf("%d - %d", b.Start, b.End)
 }
 
-func blockWriter(bRange blockRange, flagWrite string) (io.Writer, func(), error) {
+func blockWriter(bRange BlockRange, flagWrite string) (io.Writer, func(), error) {
 	if strings.TrimSpace(flagWrite) == "" {
 		return nil, func() {}, nil
 	}
@@ -144,20 +144,20 @@ func blockWriter(bRange blockRange, flagWrite string) (io.Writer, func(), error)
 
 var endOfLine = []byte("\n")
 
-func writeBlock(writer io.Writer, response *pbfirehose.Response, block *pbcodec.Block) error {
+func writeBlock(writer io.Writer, response *pbfirehose.Response, blkRef bstream.BlockRef) error {
 	line, err := jsonpb.MarshalToString(response)
 	if err != nil {
-		return fmt.Errorf("unable to marshal block %s to JSON", block.AsRef())
+		return fmt.Errorf("unable to marshal block %s to JSON", blkRef)
 	}
 
 	_, err = writer.Write([]byte(line))
 	if err != nil {
-		return fmt.Errorf("unable to write block %s line to JSON", block.AsRef())
+		return fmt.Errorf("unable to write block %s line to JSON", blkRef)
 	}
 
 	_, err = writer.Write(endOfLine)
 	if err != nil {
-		return fmt.Errorf("unable to write block %s line ending", block.AsRef())
+		return fmt.Errorf("unable to write block %s line ending", blkRef)
 	}
 	return nil
 }

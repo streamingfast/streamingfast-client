@@ -9,7 +9,6 @@ import (
 	"github.com/streamingfast/bstream"
 	dfuse "github.com/streamingfast/client-go"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
-	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -26,7 +25,7 @@ type streamConfig struct {
 	writer   io.Writer
 	stats    *stats
 
-	brange      blockRange
+	brange      BlockRange
 	filter      string
 	cursor      string
 	endpoint    string
@@ -35,7 +34,10 @@ type streamConfig struct {
 	transforms  []*anypb.Any
 }
 
-func launchStream(ctx context.Context, config streamConfig) error {
+type protocolBlockFactory func() proto.Message
+type protoToRef func(message proto.Message) bstream.BlockRef
+
+func launchStream(ctx context.Context, config streamConfig, blkFactory protocolBlockFactory, toRef protoToRef) error {
 	nextStatus := time.Now().Add(statusFrequency)
 	cursor := config.cursor
 	lastBlockRef := bstream.BlockRefEmpty
@@ -51,7 +53,7 @@ stream:
 		grpcCallOpts := []grpc.CallOption{}
 
 		if !config.skipAuth {
-			tokenInfo, err := config.dfuseCli.GetAPITokenInfo(context.Background())
+			tokenInfo, err := config.dfuseCli.GetAPITokenInfo(ctx)
 			if err != nil {
 				return fmt.Errorf("unable to retrieve StreamingFast API token: %w", err)
 			}
@@ -66,9 +68,9 @@ stream:
 		}
 
 		request := &pbfirehose.Request{
-			StartBlockNum:     config.brange.start,
+			StartBlockNum:     config.brange.Start,
 			StartCursor:       config.cursor,
-			StopBlockNum:      config.brange.end,
+			StopBlockNum:      config.brange.End,
 			ForkSteps:         forkSteps,
 			IncludeFilterExpr: config.filter,
 			Transforms:        config.transforms,
@@ -97,18 +99,17 @@ stream:
 			}
 
 			zlog.Debug("Decoding received message's block")
-			block := &pbcodec.Block{}
+			block := blkFactory()
 			if err = anypb.UnmarshalTo(response.Block, block, proto.UnmarshalOptions{}); err != nil {
 				return fmt.Errorf("should have been able to unmarshal received block payload")
 			}
 
 			cursor = response.Cursor
-			lastBlockRef = block.AsRef()
+			lastBlockRef = toRef(block)
 
 			if traceEnabled {
 				zlog.Debug("Block received",
 					zap.Stringer("block", lastBlockRef),
-					zap.Stringer("previous", bstream.NewBlockRefFromID(block.PreviousID())),
 					zap.String("cursor", cursor),
 				)
 			}
@@ -122,7 +123,7 @@ stream:
 			}
 
 			if config.writer != nil {
-				if err := writeBlock(config.writer, response, block); err != nil {
+				if err := writeBlock(config.writer, response, lastBlockRef); err != nil {
 					return err
 				}
 			}

@@ -16,7 +16,8 @@
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 # Protobuf definitions (required to be a sibling of this repository, no check perform yet, needs to be done manually)
-PROTO_ETHEREUM=${1:-"$ROOT/../proto-ethereum"}
+PROTO_ETHEREUM=${1:-"$ROOT/../proto-ethereum/"}
+PROTO_SOLANA=${1:-"$ROOT/../proto-solana/"}
 
 function main() {
   checks
@@ -25,11 +26,15 @@ function main() {
   trap "cd \"$current_dir\"" EXIT
 
   pushd "$ROOT/pb" &> /dev/null
-  generate "sf/ethereum/codec/v1/codec.proto"
-  generate "sf/ethereum/transforms/v1/transforms.proto"
+  generate $PROTO_ETHEREUM "sf/ethereum/codec/v1/codec.proto"
+  generate $PROTO_ETHEREUM "sf/ethereum/transforms/v1/transforms.proto"
+
+  generate $PROTO_SOLANA "sf/solana/codec/v1/codec.proto"
+  generate $PROTO_SOLANA "sf/solana/transforms/v1/transforms.proto"
 
   echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
-  echo "streamingfast/proto-ethereum revision: `GIT_DIR=$PROTO_ETHEREUM/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
+  echo "streamingfast/proto-ethereum revision: `GIT_DIR=$PROTO_ETHEREUM.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
+  echo "streamingfast/proto-solana revision: `GIT_DIR=$PROTO_SOLANA.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
 }
 
 # usage:
@@ -43,6 +48,7 @@ function generate() {
 
     for file in "$@"; do
       protoc -I$PROTO_ETHEREUM \
+      -I$PROTO_SOLANA \
         --go_out=. --go_opt=paths=source_relative \
         --go-grpc_out=. --go-grpc_opt=paths=source_relative,require_unimplemented_servers=false \
          $base$file
