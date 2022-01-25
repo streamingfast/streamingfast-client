@@ -53,6 +53,7 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	fantomNetwork := viper.GetBool("eth-cmd-fantom")
 	xdaiNetwork := viper.GetBool("eth-cmd-xdai")
 	outputFlag := viper.GetString("global-output")
+	skipAuth := viper.GetBool("global-skip-auth")
 
 	inputs, err := checkArgs(startCursor, args)
 	if err != nil {
@@ -87,7 +88,11 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	var clientOptions []dfuse.ClientOption
 	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
 	if apiKey == "" {
-		clientOptions = []dfuse.ClientOption{dfuse.WithoutAuthentication()}
+		apiKey = os.Getenv("SF_API_KEY")
+		if apiKey == "" {
+			clientOptions = []dfuse.ClientOption{dfuse.WithoutAuthentication()}
+			skipAuth = true
+		}
 	}
 
 	dfuse, err := dfuse.NewClient(endpoint, apiKey, clientOptions...)
@@ -129,7 +134,7 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		cursor:      startCursor,
 		endpoint:    endpoint,
 		handleForks: viper.GetBool("global-handle-forks"),
-		skipAuth:    viper.GetBool("global-skip-auth"),
+		skipAuth:    skipAuth,
 		transforms:  transforms,
 	},
 		func() proto.Message {

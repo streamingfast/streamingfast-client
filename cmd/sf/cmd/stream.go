@@ -41,7 +41,7 @@ func launchStream(ctx context.Context, config streamConfig, blkFactory protocolB
 	nextStatus := time.Now().Add(statusFrequency)
 	cursor := config.cursor
 	lastBlockRef := bstream.BlockRefEmpty
-	zlog.Info("Starting stream",
+	zlog.Info("starting stream",
 		zap.Stringer("range", config.brange),
 		zap.String("cursor", config.cursor),
 		zap.String("endpoint", config.endpoint),
@@ -49,7 +49,6 @@ func launchStream(ctx context.Context, config streamConfig, blkFactory protocolB
 	)
 stream:
 	for {
-
 		grpcCallOpts := []grpc.CallOption{}
 
 		if !config.skipAuth {
