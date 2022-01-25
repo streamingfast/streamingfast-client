@@ -3,6 +3,8 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/streamingfast/bstream"
@@ -10,21 +12,16 @@ import (
 	"github.com/streamingfast/dgrpc"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/solana/codec/v1"
-	"google.golang.org/protobuf/proto"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"os"
+	"google.golang.org/protobuf/proto"
 )
 
 var solSfCmd = &cobra.Command{
-	Use: "sol [flags] [<start_block>] [<end_block>]",
-	Short: `Streaming Fast Ethereum client
-usage: sf sol [flags] [<start_block>] [<end_block>]
-	`,
-	Long: usage,
-	Args: cobra.MinimumNArgs(0),
-	RunE: solSfCmdE,
+	Use:   "sol [flags] [<start_block>] [<end_block>]",
+	Short: `StreamingFast Solana client`,
+	Long:  usage,
+	RunE:  solSfCmdE,
 }
 
 func init() {
@@ -75,7 +72,7 @@ func solSfCmdE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create external gRPC client")
 	}
 
-	writer, closer, err := blockWriter(inputs.Brange, outputFlag)
+	writer, closer, err := blockWriter(inputs.Range, outputFlag)
 	if err != nil {
 		return fmt.Errorf("unable to setup writer: %w", err)
 	}
@@ -86,7 +83,7 @@ func solSfCmdE(cmd *cobra.Command, args []string) error {
 		dfuseCli:    dfuse,
 		writer:      writer,
 		stats:       newStats(),
-		brange:      inputs.Brange,
+		brange:      inputs.Range,
 		cursor:      startCursor,
 		endpoint:    endpoint,
 		handleForks: viper.GetBool("global-handle-forks"),

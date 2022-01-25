@@ -3,6 +3,8 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/streamingfast/bstream"
@@ -16,18 +18,14 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"os"
-	"strings"
 )
 
 var ethSfCmd = &cobra.Command{
-	Use: "eth [flags] [<start_block>] [<end_block>]",
-	Short: `Streaming Fast Ethereum client
-usage: sf eth [flags] [<start_block>] [<end_block>]
-	`,
-	Long: usage,
-	Args: cobra.MaximumNArgs(2),
-	RunE: ethSfRunE,
+	Use:   "eth [flags] [<start_block>] [<end_block>]",
+	Short: `StreamingFast Ethereum client`,
+	Long:  usage,
+	Args:  cobra.MaximumNArgs(2),
+	RunE:  ethSfRunE,
 }
 
 func init() {
@@ -56,7 +54,6 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	xdaiNetwork := viper.GetBool("eth-cmd-xdai")
 	outputFlag := viper.GetString("global-output")
 
-	fmt.Println(strings.Join(args, ", "))
 	inputs, err := checkArgs(startCursor, args)
 	if err != nil {
 		return err
@@ -108,7 +105,7 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create external gRPC client")
 	}
 
-	writer, closer, err := blockWriter(inputs.Brange, outputFlag)
+	writer, closer, err := blockWriter(inputs.Range, outputFlag)
 	if err != nil {
 		return fmt.Errorf("unable to setup writer: %w", err)
 	}
@@ -128,7 +125,7 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		dfuseCli:    dfuse,
 		writer:      writer,
 		stats:       newStats(),
-		brange:      inputs.Brange,
+		brange:      inputs.Range,
 		cursor:      startCursor,
 		endpoint:    endpoint,
 		handleForks: viper.GetBool("global-handle-forks"),
