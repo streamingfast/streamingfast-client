@@ -100,7 +100,7 @@ stream:
 			zlog.Debug("Decoding received message's block")
 			block := blkFactory()
 			if err = anypb.UnmarshalTo(response.Block, block, proto.UnmarshalOptions{}); err != nil {
-				return fmt.Errorf("should have been able to unmarshal received block payload")
+				return fmt.Errorf("should have been able to unmarshal received block payload: %w", err)
 			}
 
 			cursor = response.Cursor
