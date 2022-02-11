@@ -15,8 +15,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
-        go: [ '1.14', '1.15' ]
+        os: [ubuntu-20.04]
+        go: [ '1.17']
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2

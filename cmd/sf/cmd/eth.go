@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/streamingfast/eth-go"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -39,7 +40,9 @@ func init() {
 	ethSfCmd.Flags().Bool("xdai", false, "When set, will force the endpoint to xDai Chain")
 
 	// Transforms
-	ethSfCmd.Flags().Bool("light-block", false, "When set returned blocks will be stripped of some information")
+	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
+	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "List of addresses to filter blocks with")
+	ethSfCmd.Flags().StringSlice("log-filter-event-sigs", nil, "List of event signatures to filter blocks with")
 }
 
 func ethSfRunE(cmd *cobra.Command, args []string) error {
@@ -117,12 +120,38 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	defer closer()
 
 	transforms := []*anypb.Any{}
+
 	if viper.GetBool("eth-cmd-light-block") {
-		tranform, err := lightBlockTransform()
+		t, err := lightBlockTransform()
 		if err != nil {
-			return fmt.Errorf("unable to create light nlock transfor: %w", err)
+			return fmt.Errorf("unable to create light block transform: %w", err)
 		}
-		transforms = append(transforms, tranform)
+		transforms = append(transforms, t)
+	}
+
+	addrFilters := viper.GetStringSlice("eth-cmd-log-filter-addresses")
+	sigFilters := viper.GetStringSlice("eth-cmd-log-filter-event-sigs")
+	shouldFilterLogs := len(addrFilters) > 0 || len(sigFilters) > 0
+	var addrs []eth.Address
+	var sigs []eth.Hash
+
+	if shouldFilterLogs {
+		for _, addrString := range addrFilters {
+			addr := eth.MustNewAddress(addrString)
+			addrs = append(addrs, addr)
+		}
+
+		for _, sigString := range sigFilters {
+			sig := eth.MustNewHash(sigString)
+			sigs = append(sigs, sig)
+		}
+
+		t, err := logFilterTransform(addrs, sigs)
+		if err != nil {
+			return fmt.Errorf("unable to create log filter transform: %w", err)
+		}
+
+		transforms = append(transforms, t)
 	}
 
 	return launchStream(ctx, streamConfig{
@@ -147,5 +176,27 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 
 func lightBlockTransform() (*anypb.Any, error) {
 	transform := &pbtransforms.LightBlock{}
+	return anypb.New(transform)
+}
+
+func logFilterTransform(addrs []eth.Address, sigs []eth.Hash) (*anypb.Any, error) {
+	var addrBytes [][]byte
+	var sigsBytes [][]byte
+
+	for _, addr := range addrs {
+		b := addr.Bytes()
+		addrBytes = append(addrBytes, b)
+	}
+
+	for _, sig := range sigs {
+		b := sig.Bytes()
+		sigsBytes = append(sigsBytes, b)
+	}
+
+	transform := &pbtransforms.BasicLogFilter{
+		Addresses:       addrBytes,
+		EventSignatures: sigsBytes,
+	}
+
 	return anypb.New(transform)
 }
