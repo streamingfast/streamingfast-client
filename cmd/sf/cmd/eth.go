@@ -41,7 +41,6 @@ func init() {
 
 	// Transforms
 	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
-	ethSfCmd.Flags().Bool("log-filter", false, "When set, returned blocks will have log filters applied")
 	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "List of addresses to filter blocks with")
 	ethSfCmd.Flags().StringSlice("log-filter-event-sigs", nil, "List of event signatures to filter blocks with")
 }
@@ -130,18 +129,19 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		transforms = append(transforms, t)
 	}
 
-	if viper.GetBool("eth-cmd-log-filter") {
-		var addrs []eth.Address
-		var sigs []eth.Hash
-		addrStrings := viper.GetStringSlice("eth-cmd-log-filter-addresses")
-		sigStrings := viper.GetStringSlice("eth-cmd-log-filter-event-sigs")
+	addrFilters := viper.GetStringSlice("eth-cmd-log-filter-addresses")
+	sigFilters := viper.GetStringSlice("eth-cmd-log-filter-event-sigs")
+	shouldFilterLogs := len(addrFilters) > 0 || len(sigFilters) > 0
+	var addrs []eth.Address
+	var sigs []eth.Hash
 
-		for _, addrString := range addrStrings {
+	if shouldFilterLogs {
+		for _, addrString := range addrFilters {
 			addr := eth.MustNewAddress(addrString)
 			addrs = append(addrs, addr)
 		}
 
-		for _, sigString := range sigStrings {
+		for _, sigString := range sigFilters {
 			sig := eth.MustNewHash(sigString)
 			sigs = append(sigs, sig)
 		}
