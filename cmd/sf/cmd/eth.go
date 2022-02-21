@@ -137,63 +137,32 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	addrFilters := viper.GetStringSlice("eth-cmd-log-filter-addresses")
 	sigFilters := viper.GetStringSlice("eth-cmd-log-filter-event-sigs")
 
-	if len(multiFilter) != 0 {
-		if len(addrFilters) != 0 || len(sigFilters) != 0 {
-			return fmt.Errorf("options --log-filter-{addresses|event-sigs} are incompatible with --log-filter-multi, don't use both")
-		}
-		mf := &pbtransforms.MultiLogFilter{}
+	hasMultiFilter := len(multiFilter) != 0
+	hasSingleFilter := len(addrFilters) != 0 || len(sigFilters) != 0
 
-		for _, filter := range multiFilter {
-			parts := strings.Split(filter, ":")
-			if len(parts) != 2 {
-				return fmt.Errorf("option --log-filter-multi must be of type address_hash+address_hash+address_hash:event_sig_hash+event_sig_hash (repeated, separated by comma)")
-			}
-			var addrs []eth.Address
-			for _, a := range strings.Split(parts[0], "+") {
-				if a != "" {
-					addr := eth.MustNewAddress(a)
-					addrs = append(addrs, addr)
-				}
-			}
-			var sigs []eth.Hash
-			for _, s := range strings.Split(parts[1], "+") {
-				if s != "" {
-					sig := eth.MustNewHash(s)
-					sigs = append(sigs, sig)
-				}
-			}
-
-			mf.BasicLogFilters = append(mf.BasicLogFilters, basicLogFilter(addrs, sigs))
-		}
-
-		t, err := anypb.New(mf)
+	switch {
+	case hasMultiFilter && hasSingleFilter:
+		return fmt.Errorf("options --log-filter-{addresses|event-sigs} are incompatible with --log-filter-multi, don't use both")
+	case hasMultiFilter:
+		mft, err := parseMultiLogFilter(multiFilter)
 		if err != nil {
 			return err
 		}
-		transforms = append(transforms, t)
-	}
-
-	shouldFilterLogs := len(addrFilters) > 0 || len(sigFilters) > 0
-	var addrs []eth.Address
-	var sigs []eth.Hash
-
-	if shouldFilterLogs {
-		for _, addrString := range addrFilters {
-			addr := eth.MustNewAddress(addrString)
-			addrs = append(addrs, addr)
+		if mft != nil {
+			transforms = append(transforms, mft)
 		}
+		break
+	case hasSingleFilter:
 
-		for _, sigString := range sigFilters {
-			sig := eth.MustNewHash(sigString)
-			sigs = append(sigs, sig)
-		}
-
-		t, err := logFilterTransform(addrs, sigs)
+		t, err := parseSingleLogFilter(addrFilters, sigFilters)
 		if err != nil {
 			return fmt.Errorf("unable to create log filter transform: %w", err)
 		}
 
-		transforms = append(transforms, t)
+		if t != nil {
+			transforms = append(transforms, t)
+		}
+		break
 	}
 
 	return launchStream(ctx, streamConfig{
@@ -241,7 +210,54 @@ func basicLogFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransforms.BasicLog
 	}
 }
 
-func logFilterTransform(addrs []eth.Address, sigs []eth.Hash) (*anypb.Any, error) {
+func parseSingleLogFilter(addrFilters []string, sigFilters []string) (*anypb.Any, error) {
+	var addrs []eth.Address
+	for _, addrString := range addrFilters {
+		addr := eth.MustNewAddress(addrString)
+		addrs = append(addrs, addr)
+	}
+
+	var sigs []eth.Hash
+	for _, sigString := range sigFilters {
+		sig := eth.MustNewHash(sigString)
+		sigs = append(sigs, sig)
+	}
+
 	transform := basicLogFilter(addrs, sigs)
 	return anypb.New(transform)
+}
+
+func parseMultiLogFilter(in []string) (*anypb.Any, error) {
+
+	mf := &pbtransforms.MultiLogFilter{}
+
+	for _, filter := range in {
+		parts := strings.Split(filter, ":")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("option --log-filter-multi must be of type address_hash+address_hash+address_hash:event_sig_hash+event_sig_hash (repeated, separated by comma)")
+		}
+		var addrs []eth.Address
+		for _, a := range strings.Split(parts[0], "+") {
+			if a != "" {
+				addr := eth.MustNewAddress(a)
+				addrs = append(addrs, addr)
+			}
+		}
+		var sigs []eth.Hash
+		for _, s := range strings.Split(parts[1], "+") {
+			if s != "" {
+				sig := eth.MustNewHash(s)
+				sigs = append(sigs, sig)
+			}
+		}
+
+		mf.BasicLogFilters = append(mf.BasicLogFilters, basicLogFilter(addrs, sigs))
+	}
+
+	t, err := anypb.New(mf)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+
 }
