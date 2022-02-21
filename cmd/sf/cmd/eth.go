@@ -43,7 +43,7 @@ func init() {
 
 	// Transforms
 	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
-	ethSfCmd.Flags().StringSlice("log-filter-multi", nil, "Advanced filter. List of address:eventsig pairs, ex: '0x1111:0x3244,:0x44,0x12:' results in 3 filters. Mutually exclusive with --log-filter-addresses and --log-filter-event-sigs.")
+	ethSfCmd.Flags().StringSlice("log-filter-multi", nil, "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters. Mutually exclusive with --log-filter-addresses and --log-filter-event-sigs.")
 	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "Basic filter. List of addresses with which to filter blocks. Mutually exclusive with --log-filter-multi.")
 	ethSfCmd.Flags().StringSlice("log-filter-event-sigs", nil, "Basic filter. List of event signatures with which to filter blocks. Mutually exclusive with --log-filter-multi.")
 }
