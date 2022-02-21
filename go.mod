@@ -14,7 +14,7 @@ require (
 	github.com/streamingfast/eth-go v0.0.0-20220210031611-2c699bfe3163
 	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0
 	github.com/streamingfast/logging v0.0.0-20211221170249-09a6ecb200a0
-	github.com/streamingfast/pbgo v0.0.6-0.20211209212750-753f0acb6553
+	github.com/streamingfast/pbgo v0.0.6-0.20220217163624-f09d2a191000
 	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	google.golang.org/grpc v1.44.0

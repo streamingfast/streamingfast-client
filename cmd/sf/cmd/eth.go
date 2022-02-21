@@ -3,8 +3,10 @@ package cmd
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/streamingfast/eth-go"
 	"os"
+	"strings"
+
+	"github.com/streamingfast/eth-go"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,8 +43,9 @@ func init() {
 
 	// Transforms
 	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
-	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "List of addresses to filter blocks with")
-	ethSfCmd.Flags().StringSlice("log-filter-event-sigs", nil, "List of event signatures to filter blocks with")
+	ethSfCmd.Flags().StringSlice("log-filter-multi", nil, "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters. Mutually exclusive with --log-filter-addresses and --log-filter-event-sigs.")
+	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "Basic filter. List of addresses with which to filter blocks. Mutually exclusive with --log-filter-multi.")
+	ethSfCmd.Flags().StringSlice("log-filter-event-sigs", nil, "Basic filter. List of event signatures with which to filter blocks. Mutually exclusive with --log-filter-multi.")
 }
 
 func ethSfRunE(cmd *cobra.Command, args []string) error {
@@ -129,29 +132,36 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		transforms = append(transforms, t)
 	}
 
+	multiFilter := viper.GetStringSlice("eth-cmd-log-filter-multi")
 	addrFilters := viper.GetStringSlice("eth-cmd-log-filter-addresses")
 	sigFilters := viper.GetStringSlice("eth-cmd-log-filter-event-sigs")
-	shouldFilterLogs := len(addrFilters) > 0 || len(sigFilters) > 0
-	var addrs []eth.Address
-	var sigs []eth.Hash
 
-	if shouldFilterLogs {
-		for _, addrString := range addrFilters {
-			addr := eth.MustNewAddress(addrString)
-			addrs = append(addrs, addr)
+	hasMultiFilter := len(multiFilter) != 0
+	hasSingleFilter := len(addrFilters) != 0 || len(sigFilters) != 0
+
+	switch {
+	case hasMultiFilter && hasSingleFilter:
+		return fmt.Errorf("options --log-filter-{addresses|event-sigs} are incompatible with --log-filter-multi, don't use both")
+	case hasMultiFilter:
+		mft, err := parseMultiLogFilter(multiFilter)
+		if err != nil {
+			return err
 		}
-
-		for _, sigString := range sigFilters {
-			sig := eth.MustNewHash(sigString)
-			sigs = append(sigs, sig)
+		if mft != nil {
+			transforms = append(transforms, mft)
 		}
+		break
+	case hasSingleFilter:
 
-		t, err := logFilterTransform(addrs, sigs)
+		t, err := parseSingleLogFilter(addrFilters, sigFilters)
 		if err != nil {
 			return fmt.Errorf("unable to create log filter transform: %w", err)
 		}
 
-		transforms = append(transforms, t)
+		if t != nil {
+			transforms = append(transforms, t)
+		}
+		break
 	}
 
 	return launchStream(ctx, streamConfig{
@@ -179,7 +189,7 @@ func lightBlockTransform() (*anypb.Any, error) {
 	return anypb.New(transform)
 }
 
-func logFilterTransform(addrs []eth.Address, sigs []eth.Hash) (*anypb.Any, error) {
+func basicLogFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransforms.BasicLogFilter {
 	var addrBytes [][]byte
 	var sigsBytes [][]byte
 
@@ -193,10 +203,60 @@ func logFilterTransform(addrs []eth.Address, sigs []eth.Hash) (*anypb.Any, error
 		sigsBytes = append(sigsBytes, b)
 	}
 
-	transform := &pbtransforms.BasicLogFilter{
+	return &pbtransforms.BasicLogFilter{
 		Addresses:       addrBytes,
 		EventSignatures: sigsBytes,
 	}
+}
 
+func parseSingleLogFilter(addrFilters []string, sigFilters []string) (*anypb.Any, error) {
+	var addrs []eth.Address
+	for _, addrString := range addrFilters {
+		addr := eth.MustNewAddress(addrString)
+		addrs = append(addrs, addr)
+	}
+
+	var sigs []eth.Hash
+	for _, sigString := range sigFilters {
+		sig := eth.MustNewHash(sigString)
+		sigs = append(sigs, sig)
+	}
+
+	transform := basicLogFilter(addrs, sigs)
 	return anypb.New(transform)
+}
+
+func parseMultiLogFilter(in []string) (*anypb.Any, error) {
+
+	mf := &pbtransforms.MultiLogFilter{}
+
+	for _, filter := range in {
+		parts := strings.Split(filter, ":")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("option --log-filter-multi must be of type address_hash+address_hash+address_hash:event_sig_hash+event_sig_hash (repeated, separated by comma)")
+		}
+		var addrs []eth.Address
+		for _, a := range strings.Split(parts[0], "+") {
+			if a != "" {
+				addr := eth.MustNewAddress(a)
+				addrs = append(addrs, addr)
+			}
+		}
+		var sigs []eth.Hash
+		for _, s := range strings.Split(parts[1], "+") {
+			if s != "" {
+				sig := eth.MustNewHash(s)
+				sigs = append(sigs, sig)
+			}
+		}
+
+		mf.BasicLogFilters = append(mf.BasicLogFilters, basicLogFilter(addrs, sigs))
+	}
+
+	t, err := anypb.New(mf)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+
 }
