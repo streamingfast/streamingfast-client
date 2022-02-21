@@ -150,13 +150,17 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 			}
 			var addrs []eth.Address
 			for _, a := range strings.Split(parts[0], "+") {
-				addr := eth.MustNewAddress(a)
-				addrs = append(addrs, addr)
+				if a != "" {
+					addr := eth.MustNewAddress(a)
+					addrs = append(addrs, addr)
+				}
 			}
 			var sigs []eth.Hash
 			for _, s := range strings.Split(parts[1], "+") {
-				sig := eth.MustNewHash(s)
-				sigs = append(sigs, sig)
+				if s != "" {
+					sig := eth.MustNewHash(s)
+					sigs = append(sigs, sig)
+				}
 			}
 
 			mf.BasicLogFilters = append(mf.BasicLogFilters, basicLogFilter(addrs, sigs))
