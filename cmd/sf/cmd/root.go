@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
 )
 
 const usage = `
@@ -18,9 +19,6 @@ If STREAMINGFAST_API_KEY environment is not set, only unauthenticated network
 will be connectable to, authenticated network will refuse the connection.
 
 Parameters:
-  <filter>        Optional A valid CEL filter expression for the Ethereum network, only
-                  transactions matching the filter will be returned to you.
-
   <start_block>   Optional block number where to start streaming blocks from,
                   Can be positive (an absolute reference to a block), or
                   negative (a number of blocks from the tip of the chain).
@@ -29,29 +27,23 @@ Parameters:
 				  the stream of blocks will stop If not specified, the stream
 				  will stop when the Ethereum network stops: never.
 Examples:
-  # Watch all calls to the UniswapV2 Router, for a single block and close
-  $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
-  # Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
-  $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
+
+  # Look at ALL blocks in a given range on ETH mainnet
+  $ sf eth 100000 100010
+
+  # Stream blocks in a given range on BSC with logs that match a given address and event signature (topic0) 
+  #   (transactions that do not match are filtered out of the "transactionTraces" array in the response)
+  # sf eth --bsc --log-filter-addresses='0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73' --log-filter-event-sigs='0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9' 6500000 6810800
 
   # Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
-  $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+  $ sf eth --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 
-  # Look at ALL blocks in a given range on Binance Smart Chain (BSC)
-  $ sf --bsc "true" 100000 100002
+  # Stream blocks from the last 5 on NEAR testnet
+  $ sf near --testnet -- -5
 
   # Look at ALL blocks in a given range on Polygon Chain
-  $ sf --polygon "true" 100000 100002
-
-  # Look at ALL blocks in a given range on Huobi ECO Chain
-  $ sf --heco "true" 100000 100002
-
-  # Look at recent blocks and stream forever on Fantom Opera Mainnet
-  $ sf --fantom "true" -5
-
-  # Look at recent blocks and stream forever on xDai Chain
-  $ sf --xdai "true" -5
+  $ sf eth --polygon 100000 100010
 `
 
 // RootCmd represents the eosc command
@@ -63,7 +55,6 @@ var RootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringP("endpoint", "e", "api.streamingfast.io:443", "The endpoint to connect the stream of blocks to")
 	RootCmd.PersistentFlags().Bool("handle-forks", false, "Request notifications type STEP_UNDO when a block was forked out, and STEP_IRREVERSIBLE after a block has seen enough confirmations (200)")
 	RootCmd.PersistentFlags().BoolP("insecure", "s", false, "Enables Insecure connection, When set, skips certification verification")
 	RootCmd.PersistentFlags().BoolP("skip-auth", "a", false, "Skips the authentication")
