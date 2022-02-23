@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
 )
 
 const usage = `
@@ -30,28 +31,19 @@ Parameters:
 				  will stop when the Ethereum network stops: never.
 Examples:
   # Watch all calls to the UniswapV2 Router, for a single block and close
-  $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
+  $ sf eth "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" 11700000 11700001
 
   # Watch all calls to the UniswapV2 Router, include the last 100 blocks, and stream forever
-  $ sf "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
+  $ sf eth "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']" -100
 
   # Continue where you left off, start from the last known cursor, get all fork notifications (UNDO, IRREVERSIBLE), stream forever
-  $ sf --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
+  $ sf eth --handle-forks --start-cursor "10928019832019283019283" "to in ['0x7a250d5630b4cf539739df2c5dacb4c659f2488d']"
 
   # Look at ALL blocks in a given range on Binance Smart Chain (BSC)
-  $ sf --bsc "true" 100000 100002
+  $ sf eth --bsc "true" 100000 100002
 
   # Look at ALL blocks in a given range on Polygon Chain
-  $ sf --polygon "true" 100000 100002
-
-  # Look at ALL blocks in a given range on Huobi ECO Chain
-  $ sf --heco "true" 100000 100002
-
-  # Look at recent blocks and stream forever on Fantom Opera Mainnet
-  $ sf --fantom "true" -5
-
-  # Look at recent blocks and stream forever on xDai Chain
-  $ sf --xdai "true" -5
+  $ sf eth --polygon "true" 100000 100002
 `
 
 // RootCmd represents the eosc command
@@ -63,7 +55,6 @@ var RootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringP("endpoint", "e", "api.streamingfast.io:443", "The endpoint to connect the stream of blocks to")
 	RootCmd.PersistentFlags().Bool("handle-forks", false, "Request notifications type STEP_UNDO when a block was forked out, and STEP_IRREVERSIBLE after a block has seen enough confirmations (200)")
 	RootCmd.PersistentFlags().BoolP("insecure", "s", false, "Enables Insecure connection, When set, skips certification verification")
 	RootCmd.PersistentFlags().BoolP("skip-auth", "a", false, "Skips the authentication")

@@ -1,3 +1,4 @@
-generate.sh - Fri 18 Feb 2022 15:56:53 EST - stepd
+generate.sh - Wed 23 Feb 2022 09:26:55 EST - stepd
 streamingfast/proto-ethereum revision: ede1f59fa2a0fb9bf47b61e23019b873b89c144a
 streamingfast/proto-solana revision: 
+streamingfast/proto-near revision: 091edb9a331e96cf90b2d7db24d6b7367d015ae9

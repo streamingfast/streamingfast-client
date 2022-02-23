@@ -34,12 +34,18 @@ var ethSfCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(ethSfCmd)
 
+	defaultEthEndpoint := "api.streamingfast.io:443"
+	if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
+		defaultEthEndpoint = e
+	}
+	ethSfCmd.Flags().StringP("endpoint", "e", defaultEthEndpoint, "The endpoint to connect the stream of blocks (default value set by STREAMINGFAST_ENDPOINT env var, can be overriden by network-specific flags like --bsc)")
+
 	// Endpoint settings
-	ethSfCmd.Flags().Bool("bsc", false, "When set, will force the endpoint to Binance Smart Chain")
-	ethSfCmd.Flags().Bool("polygon", false, "When set, will force the endpoint to Polygon (previously Matic)")
-	ethSfCmd.Flags().Bool("heco", false, "When set, will force the endpoint to Huobi Eco Chain")
-	ethSfCmd.Flags().Bool("fantom", false, "When set, will force the endpoint to Fantom Opera Mainnet")
-	ethSfCmd.Flags().Bool("xdai", false, "When set, will force the endpoint to xDai Chain")
+	ethSfCmd.Flags().Bool("bsc", false, "When set, will change the default endpoint to Binance Smart Chain")
+	ethSfCmd.Flags().Bool("polygon", false, "When set, will change the default endpoint to Polygon (previously Matic)")
+	ethSfCmd.Flags().Bool("heco", false, "When set, will change the default endpoint to Huobi Eco Chain")
+	ethSfCmd.Flags().Bool("fantom", false, "When set, will change the default endpoint to Fantom Opera Mainnet")
+	ethSfCmd.Flags().Bool("xdai", false, "When set, will change the default endpoint to xDai Chain")
 
 	// Transforms
 	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
@@ -52,7 +58,8 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
 	startCursor := viper.GetString("global-start-cursor")
-	endpoint := viper.GetString("global-endpoint")
+
+	endpoint := viper.GetString("eth-cmd-endpoint")
 	bscNetwork := viper.GetBool("eth-cmd-bsc")
 	polygonNetwork := viper.GetBool("eth-cmd-polygon")
 	hecoNetwork := viper.GetBool("eth-cmd-heco")
@@ -82,10 +89,6 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		endpoint = "fantom.streamingfast.io:443"
 	case xdaiNetwork:
 		endpoint = "xdai.streamingfast.io:443"
-	default:
-		if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
-			endpoint = e
-		}
 	}
 	if endpoint == "" {
 		return fmt.Errorf("unable to resolve endpoint")

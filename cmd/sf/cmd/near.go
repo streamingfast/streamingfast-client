@@ -11,42 +11,39 @@ import (
 	dfuse "github.com/streamingfast/client-go"
 	"github.com/streamingfast/dgrpc"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
-	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/solana/codec/v1"
+	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/near/codec/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/proto"
 )
 
-var solSfCmd = &cobra.Command{
-	Use:   "sol [flags] [<start_block>] [<end_block>]",
-	Short: `StreamingFast Solana client`,
+var nearSfCmd = &cobra.Command{
+	Use:   "near [flags] [<start_block>] [<end_block>]",
+	Short: `StreamingFast Near client`,
 	Long:  usage,
-	RunE:  solSfCmdE,
+	RunE:  nearSfCmdE,
 }
 
 func init() {
-	RootCmd.AddCommand(solSfCmd)
+	RootCmd.AddCommand(nearSfCmd)
 
-	// Transforms
-	solSfCmd.Flags().String("program-filter", "", "Specifcy a comma delimited base58 program addresses to filter a block for given programs")
-
-	defaultSolEndpoint := "mainnet.sol.streamingfast.io:443"
+	defaultNearEndpoint := "mainnet.near.streamingfast.io:443"
 	if e := os.Getenv("STREAMINGFAST_ENDPOINT"); e != "" {
-		defaultSolEndpoint = e
+		defaultNearEndpoint = e
 	}
-	solSfCmd.Flags().StringP("endpoint", "e", defaultSolEndpoint, "The endpoint to connect the stream of blocks (default value set by STREAMINGFAST_ENDPOINT env var, can be overriden by network-specific flags like --testnet)")
-	solSfCmd.Flags().Bool("testnet", false, "When set, will switch default endpoint testnet")
-
+	nearSfCmd.Flags().StringP("endpoint", "e", defaultNearEndpoint, "The endpoint to connect the stream of blocks (default value set by STREAMINGFAST_ENDPOINT env var, can be overriden by network-specific flags like --testnet)")
+	nearSfCmd.Flags().Bool("testnet", false, "When set, will switch default endpoint testnet")
 }
 
-func solSfCmdE(cmd *cobra.Command, args []string) error {
+func nearSfCmdE(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
 	startCursor := viper.GetString("global-start-cursor")
-	endpoint := viper.GetString("sol-cmd-endpoint")
-	testnet := viper.GetBool("sol-cmd-testnet")
+	endpoint := viper.GetString("near-cmd-endpoint")
 	outputFlag := viper.GetString("global-output")
 	skipAuth := viper.GetBool("global-skip-auth")
+
+	testnet := viper.GetBool("near-cmd-testnet")
 
 	inputs, err := checkArgs(startCursor, args)
 	if err != nil {
@@ -54,7 +51,7 @@ func solSfCmdE(cmd *cobra.Command, args []string) error {
 	}
 
 	if testnet {
-		endpoint = "testnet.sol.streamingfast.io:443"
+		endpoint = "testnet.near.streamingfast.io:443"
 	}
 	if endpoint == "" {
 		return fmt.Errorf("unable to resolve endpoint")
@@ -106,6 +103,7 @@ func solSfCmdE(cmd *cobra.Command, args []string) error {
 			return &pbcodec.Block{}
 		},
 		func(message proto.Message) bstream.BlockRef {
-			return message.(*pbcodec.Block).AsRef()
+			b := message.(*pbcodec.Block)
+			return bstream.NewBlockRef(b.Header.Hash.String(), b.Header.Height)
 		})
 }
