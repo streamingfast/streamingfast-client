@@ -8,11 +8,11 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.1
-	github.com/streamingfast/client-go v0.1.1-0.20211209213306-176b10240a19
+	github.com/streamingfast/client-go v0.1.1-0.20220215005344-ebb57842b6ad
 	github.com/streamingfast/dgrpc v0.0.0-20211210152421-f8cec68e0383
 	github.com/streamingfast/eth-go v0.0.0-20220210031611-2c699bfe3163
 	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0
-	github.com/streamingfast/logging v0.0.0-20211221170249-09a6ecb200a0
+	github.com/streamingfast/logging v0.0.0-20220222131651-12c3943aac2e
 	github.com/streamingfast/pbgo v0.0.6-0.20220217163624-f09d2a191000
 	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8

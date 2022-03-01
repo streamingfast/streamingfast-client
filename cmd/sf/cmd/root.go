@@ -32,7 +32,7 @@ Examples:
   # Look at ALL blocks in a given range on ETH mainnet
   $ sf eth 100000 100010
 
-  # Stream blocks in a given range on BSC with logs that match a given address and event signature (topic0) 
+  # Stream blocks in a given range on BSC with logs that match a given address and event signature (topic0)
   #   (transactions that do not match are filtered out of the "transactionTraces" array in the response)
   # sf eth --bsc --log-filter-addresses='0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73' --log-filter-event-sigs='0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9' 6500000 6810800
 
@@ -56,7 +56,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().Bool("handle-forks", false, "Request notifications type STEP_UNDO when a block was forked out, and STEP_IRREVERSIBLE after a block has seen enough confirmations (200)")
-	RootCmd.PersistentFlags().BoolP("insecure", "s", false, "Enables Insecure connection, When set, skips certification verification")
+	RootCmd.PersistentFlags().BoolP("insecure", "s", false, "Use TLS for the connection with the remote server but skips SSL certificate verification, this is an insecure setup")
+	RootCmd.PersistentFlags().BoolP("plaintext", "p", false, "Use plain text for the connection with the remote server, this is an insecure setup and any middleman is able to see the traffic")
 	RootCmd.PersistentFlags().BoolP("skip-auth", "a", false, "Skips the authentication")
 	RootCmd.PersistentFlags().StringP("output", "o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 	RootCmd.PersistentFlags().String("start-cursor", "", "Last cursor used to continue where you left off")

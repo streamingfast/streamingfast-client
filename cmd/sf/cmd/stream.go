@@ -2,16 +2,22 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"os"
 	"time"
 
+	"github.com/spf13/viper"
 	dfuse "github.com/streamingfast/client-go"
+	"github.com/streamingfast/dgrpc"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	sf "github.com/streamingfast/streamingfast-client"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/oauth"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -20,39 +26,89 @@ import (
 var retryDelay = 5 * time.Second
 
 type streamConfig struct {
-	client   pbfirehose.StreamClient
-	dfuseCli dfuse.Client
-	writer   io.Writer
-	stats    *stats
-
+	writer      io.Writer
+	stats       *stats
 	brange      BlockRange
 	filter      string
 	cursor      string
 	endpoint    string
 	handleForks bool
-	skipAuth    bool
 	transforms  []*anypb.Any
 }
 
 type protocolBlockFactory func() proto.Message
 type protoToRef func(message proto.Message) sf.BlockRef
 
+func newStream(endpoint string) (stream pbfirehose.StreamClient, client dfuse.Client, skipAuth bool, err error) {
+	var clientOptions []dfuse.ClientOption
+	apiKey := os.Getenv("STREAMINGFAST_API_KEY")
+	if apiKey == "" {
+		apiKey = os.Getenv("SF_API_KEY")
+		if apiKey == "" {
+			clientOptions = []dfuse.ClientOption{dfuse.WithoutAuthentication()}
+			skipAuth = true
+		}
+	}
+
+	if viper.GetBool("global-skip-auth") {
+		clientOptions = []dfuse.ClientOption{dfuse.WithoutAuthentication()}
+		skipAuth = true
+	}
+
+	client, err = dfuse.NewClient(endpoint, apiKey, clientOptions...)
+	if err != nil {
+		return nil, nil, false, fmt.Errorf("unable to create streamingfast client")
+	}
+
+	useInsecureTSLConnection := viper.GetBool("global-insecure")
+	usePlainTextConnection := viper.GetBool("global-plaintext")
+
+	if useInsecureTSLConnection && usePlainTextConnection {
+		return nil, nil, false, fmt.Errorf("option --insecure and --plaintext are mutually exclusive, they cannot be both specified at the same time")
+	}
+
+	var dialOptions []grpc.DialOption
+	switch {
+	case usePlainTextConnection:
+		zlog.Debug("Configuring transport to use a plain text connection")
+		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+
+	case useInsecureTSLConnection:
+		zlog.Debug("Configuring transport to use an insecure TLS connection (skips certificate verification)")
+		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
+	}
+
+	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
+	if err != nil {
+		return nil, nil, false, fmt.Errorf("unable to create external gRPC client")
+	}
+
+	return pbfirehose.NewStreamClient(conn), client, skipAuth, err
+}
+
 func launchStream(ctx context.Context, config streamConfig, blkFactory protocolBlockFactory, toRef protoToRef) error {
 	nextStatus := time.Now().Add(statusFrequency)
 	cursor := config.cursor
 	lastBlockRef := sf.EmptyBlockRef
+
 	zlog.Info("starting stream",
 		zap.Stringer("range", config.brange),
 		zap.String("cursor", config.cursor),
 		zap.String("endpoint", config.endpoint),
 		zap.Bool("handle_forks", config.handleForks),
 	)
+
+	firehoseClient, dfuse, skipAuth, err := newStream(config.endpoint)
+	if err != nil {
+		return err
+	}
+
 stream:
 	for {
 		grpcCallOpts := []grpc.CallOption{}
 
-		if !config.skipAuth {
-			tokenInfo, err := config.dfuseCli.GetAPITokenInfo(ctx)
+		if !skipAuth {
+			tokenInfo, err := dfuse.GetAPITokenInfo(ctx)
 			if err != nil {
 				return fmt.Errorf("unable to retrieve StreamingFast API token: %w", err)
 			}
@@ -75,7 +131,8 @@ stream:
 			Transforms:        config.transforms,
 		}
 
-		stream, err := config.client.Blocks(context.Background(), request, grpcCallOpts...)
+		zlog.Debug("Initiating stream with remote endpoint", zap.String("endpoint", config.endpoint))
+		stream, err := firehoseClient.Blocks(context.Background(), request, grpcCallOpts...)
 		if err != nil {
 			return fmt.Errorf("unable to start blocks stream: %w", err)
 		}
@@ -106,7 +163,7 @@ stream:
 			cursor = response.Cursor
 			lastBlockRef = toRef(block)
 
-			if traceEnabled {
+			if tracer.Enabled() {
 				zlog.Debug("Block received",
 					zap.Stringer("block", lastBlockRef),
 					zap.String("cursor", cursor),

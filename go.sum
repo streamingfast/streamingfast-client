@@ -514,6 +514,8 @@ github.com/spf13/viper v1.10.1/go.mod h1:IGlFPqhNAPKRxohIzWpI5QEy4kuI7tcl5WvR+8q
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streamingfast/client-go v0.1.1-0.20211209213306-176b10240a19 h1:Tm1dBTl+zwXNoyAwQ8jMwUHYWyy/MyEYsbYqhUQATvY=
 github.com/streamingfast/client-go v0.1.1-0.20211209213306-176b10240a19/go.mod h1:M+55gkc60al+d8AjAmpFgs49QUX1QjzOhqjIbY0zgms=
+github.com/streamingfast/client-go v0.1.1-0.20220215005344-ebb57842b6ad h1:K9DnWC3bvY54iXi8O0Nahjkf520JUypViIu6uxJHn4Y=
+github.com/streamingfast/client-go v0.1.1-0.20220215005344-ebb57842b6ad/go.mod h1:uMTe4VSKwiduITjQkTKUFgB6vb6PBU92kQvPAOsFnEY=
 github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb/go.mod h1:zL7vriSdKmvbNntPVlXzPDizifaTwUv6+1TGp6KdO88=
 github.com/streamingfast/derr v0.0.0-20210811180100-9138d738bcec/go.mod h1:ulVfui/yGXmPBbt9aAqCWdAjM7YxnZkYHzvQktLfw3M=
 github.com/streamingfast/dgrpc v0.0.0-20210810185305-905172f728e8/go.mod h1:jBj49IB1Oa9ILev6cx9CfXl7Td83Mdyn2gJOA9F+vZA=
@@ -530,6 +532,9 @@ github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0/go.mod h1:cTN
 github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a/go.mod h1:4GdqELhZOXj4xwc4IaBmzofzdErGynnaSzuzxy0ZIBo=
 github.com/streamingfast/logging v0.0.0-20211221170249-09a6ecb200a0 h1:dNW2NqAK3nZIF4n5SmjLOUsFxy+YJx9KDE0mGtcviBE=
 github.com/streamingfast/logging v0.0.0-20211221170249-09a6ecb200a0/go.mod h1:4GdqELhZOXj4xwc4IaBmzofzdErGynnaSzuzxy0ZIBo=
+github.com/streamingfast/logging v0.0.0-20220214194203-5c70c134fea8/go.mod h1:4GdqELhZOXj4xwc4IaBmzofzdErGynnaSzuzxy0ZIBo=
+github.com/streamingfast/logging v0.0.0-20220222131651-12c3943aac2e h1:vQphQ4CW7nfw/RMsK0fkqwJoetr6bBGMoQA1uhIJp8Y=
+github.com/streamingfast/logging v0.0.0-20220222131651-12c3943aac2e/go.mod h1:4GdqELhZOXj4xwc4IaBmzofzdErGynnaSzuzxy0ZIBo=
 github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc/go.mod h1:mSi3+mIAffPq/McZ3TqLSmDr8f1v3mi5RHE+zmBHJGk=
 github.com/streamingfast/pbgo v0.0.6-0.20211209212750-753f0acb6553/go.mod h1:fobYEIfCKwPOY+VLX7HXBVuhrn+iZrzujKrpCgfG3+Q=
 github.com/streamingfast/pbgo v0.0.6-0.20220217163624-f09d2a191000 h1:fX52MC0tttiaV2s74X/URt/zZpH8/NS23ToPTdfAvnk=
