@@ -1,3 +1,5 @@
 .envrc
 .goreleaser.SOURCE_ME.sh
 .idea
+/dist
+out.json
