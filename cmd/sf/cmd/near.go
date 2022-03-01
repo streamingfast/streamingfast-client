@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/streamingfast/bstream"
 	dfuse "github.com/streamingfast/client-go"
 	"github.com/streamingfast/dgrpc"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/near/codec/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -102,8 +102,8 @@ func nearSfCmdE(cmd *cobra.Command, args []string) error {
 		func() proto.Message {
 			return &pbcodec.Block{}
 		},
-		func(message proto.Message) bstream.BlockRef {
+		func(message proto.Message) sf.BlockRef {
 			b := message.(*pbcodec.Block)
-			return bstream.NewBlockRef(b.Header.Hash.String(), b.Header.Height)
+			return sf.NewBlockRef(b.Header.Hash.String(), b.Header.Height)
 		})
 }

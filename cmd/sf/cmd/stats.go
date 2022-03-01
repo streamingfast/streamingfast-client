@@ -2,17 +2,18 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/paulbellamy/ratecounter"
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/jsonpb"
-	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
-	"go.uber.org/zap/zapcore"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/paulbellamy/ratecounter"
+	"github.com/streamingfast/jsonpb"
+	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	sf "github.com/streamingfast/streamingfast-client"
+	"go.uber.org/zap/zapcore"
 )
 
 var statusFrequency = 15 * time.Second
@@ -144,7 +145,7 @@ func blockWriter(bRange BlockRange, flagWrite string) (io.Writer, func(), error)
 
 var endOfLine = []byte("\n")
 
-func writeBlock(writer io.Writer, response *pbfirehose.Response, blkRef bstream.BlockRef) error {
+func writeBlock(writer io.Writer, response *pbfirehose.Response, blkRef sf.BlockRef) error {
 	line, err := jsonpb.MarshalToString(response)
 	if err != nil {
 		return fmt.Errorf("unable to marshal block %s to JSON", blkRef)

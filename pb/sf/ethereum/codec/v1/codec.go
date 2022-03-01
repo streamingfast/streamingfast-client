@@ -3,8 +3,8 @@ package pbcodec
 import (
 	"encoding/hex"
 
-	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/jsonpb"
+	sf "github.com/streamingfast/streamingfast-client"
 )
 
 func (b *Block) ID() string {
@@ -15,8 +15,8 @@ func (b *Block) PreviousID() string {
 	return hex.EncodeToString(b.Header.ParentHash)
 }
 
-func (b *Block) AsRef() bstream.BlockRef {
-	return bstream.NewBlockRef(b.ID(), b.Number)
+func (b *Block) AsRef() sf.BlockRef {
+	return sf.NewBlockRef(b.ID(), b.Number)
 }
 
 func (m *BigInt) MarshalJSON() ([]byte, error) {

@@ -6,9 +6,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/streamingfast/bstream"
 	dfuse "github.com/streamingfast/client-go"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	sf "github.com/streamingfast/streamingfast-client"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -35,12 +35,12 @@ type streamConfig struct {
 }
 
 type protocolBlockFactory func() proto.Message
-type protoToRef func(message proto.Message) bstream.BlockRef
+type protoToRef func(message proto.Message) sf.BlockRef
 
 func launchStream(ctx context.Context, config streamConfig, blkFactory protocolBlockFactory, toRef protoToRef) error {
 	nextStatus := time.Now().Add(statusFrequency)
 	cursor := config.cursor
-	lastBlockRef := bstream.BlockRefEmpty
+	lastBlockRef := sf.EmptyBlockRef
 	zlog.Info("starting stream",
 		zap.Stringer("range", config.brange),
 		zap.String("cursor", config.cursor),
