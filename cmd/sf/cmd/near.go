@@ -8,7 +8,9 @@ import (
 	"github.com/spf13/viper"
 	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/near/codec/v1"
+	pbtransforms "github.com/streamingfast/streamingfast-client/pb/sf/near/transforms/v1"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var nearSfCmd = &cobra.Command{
@@ -27,6 +29,7 @@ func init() {
 	}
 	nearSfCmd.Flags().StringP("endpoint", "e", defaultNearEndpoint, "The endpoint to connect the stream of blocks (default value set by STREAMINGFAST_ENDPOINT env var, can be overriden by network-specific flags like --testnet)")
 	nearSfCmd.Flags().Bool("testnet", false, "When set, will switch default endpoint testnet")
+	nearSfCmd.Flags().StringSlice("filter-accounts", nil, "Basic filter. List of accounts with which to filter blocks")
 }
 
 func nearSfCmdE(cmd *cobra.Command, args []string) error {
@@ -36,6 +39,19 @@ func nearSfCmdE(cmd *cobra.Command, args []string) error {
 	endpoint := viper.GetString("near-cmd-endpoint")
 	outputFlag := viper.GetString("global-output")
 	testnet := viper.GetBool("near-cmd-testnet")
+	filterAccounts := viper.GetStringSlice("near-cmd-filter-accounts")
+
+	transforms := []*anypb.Any{}
+	if len(filterAccounts) != 0 {
+		t := &pbtransforms.BasicReceiptFilter{
+			Accounts: filterAccounts,
+		}
+		transformAny, err := anypb.New(t)
+		if err != nil {
+			return fmt.Errorf("processing transform for basicReceiptFilter: %w", err)
+		}
+		transforms = append(transforms, transformAny)
+	}
 
 	inputs, err := checkArgs(startCursor, args)
 	if err != nil {
@@ -62,6 +78,7 @@ func nearSfCmdE(cmd *cobra.Command, args []string) error {
 		cursor:      startCursor,
 		endpoint:    endpoint,
 		handleForks: viper.GetBool("global-handle-forks"),
+		transforms:  transforms,
 	},
 		func() proto.Message {
 			return &pbcodec.Block{}
