@@ -46,6 +46,10 @@ func init() {
 	ethSfCmd.Flags().StringSlice("log-filter-multi", nil, "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters. Mutually exclusive with --log-filter-addresses and --log-filter-event-sigs.")
 	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "Basic filter. List of addresses with which to filter blocks. Mutually exclusive with --log-filter-multi.")
 	ethSfCmd.Flags().StringSlice("log-filter-event-sigs", nil, "Basic filter. List of event signatures with which to filter blocks. Mutually exclusive with --log-filter-multi.")
+
+	ethSfCmd.Flags().StringSlice("call-filter-multi", nil, "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters. Mutually exclusive with --call-filter-addresses and --call-filter-sigs.")
+	ethSfCmd.Flags().StringSlice("call-filter-addresses", nil, "Basic filter. List of addresses with which to filter blocks. Mutually exclusive with --call-filter-multi.")
+	ethSfCmd.Flags().StringSlice("call-filter-sigs", nil, "Basic filter. List of method signatures with which to filter blocks. Mutually exclusive with --call-filter-multi.")
 }
 
 func ethSfRunE(cmd *cobra.Command, args []string) error {
@@ -125,6 +129,37 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	case hasSingleFilter:
 
 		t, err := parseSingleLogFilter(addrFilters, sigFilters)
+		if err != nil {
+			return fmt.Errorf("unable to create log filter transform: %w", err)
+		}
+
+		if t != nil {
+			transforms = append(transforms, t)
+		}
+		break
+	}
+
+	multiCallFilter := viper.GetStringSlice("eth-cmd-call-filter-multi")
+	addrCallFilters := viper.GetStringSlice("eth-cmd-call-filter-addresses")
+	sigCallFilters := viper.GetStringSlice("eth-cmd-call-filter-sigs")
+
+	hasMultiCallFilter := len(multiCallFilter) != 0
+	hasSingleCallFilter := len(addrCallFilters) != 0 || len(sigCallFilters) != 0
+
+	switch {
+	case hasMultiCallFilter && hasSingleCallFilter:
+		return fmt.Errorf("options --call-filter-{addresses|sigs} are incompatible with --call-filter-multi, don't use both")
+	case hasMultiCallFilter:
+		mft, err := parseMultiCallToFilter(multiCallFilter)
+		if err != nil {
+			return err
+		}
+		if mft != nil {
+			transforms = append(transforms, mft)
+		}
+		break
+	case hasSingleCallFilter:
+		t, err := parseSingleCallToFilter(addrCallFilters, sigCallFilters)
 		if err != nil {
 			return fmt.Errorf("unable to create log filter transform: %w", err)
 		}
@@ -227,4 +262,76 @@ func parseMultiLogFilter(in []string) (*anypb.Any, error) {
 	}
 	return t, nil
 
+}
+
+func parseSingleCallToFilter(addrFilters []string, sigFilters []string) (*anypb.Any, error) {
+	var addrs []eth.Address
+	for _, addrString := range addrFilters {
+		addr := eth.MustNewAddress(addrString)
+		addrs = append(addrs, addr)
+	}
+
+	var sigs []eth.Hash
+	for _, sigString := range sigFilters {
+		sig := eth.MustNewHash(sigString)
+		sigs = append(sigs, sig)
+	}
+
+	transform := basicCallToFilter(addrs, sigs)
+	return anypb.New(transform)
+}
+
+func parseMultiCallToFilter(in []string) (*anypb.Any, error) {
+
+	mf := &pbtransform.MultiCallToFilter{}
+
+	for _, filter := range in {
+		parts := strings.Split(filter, ":")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("option --log-filter-multi must be of type address_hash+address_hash+address_hash:event_sig_hash+event_sig_hash (repeated, separated by comma)")
+		}
+		var addrs []eth.Address
+		for _, a := range strings.Split(parts[0], "+") {
+			if a != "" {
+				addr := eth.MustNewAddress(a)
+				addrs = append(addrs, addr)
+			}
+		}
+		var sigs []eth.Hash
+		for _, s := range strings.Split(parts[1], "+") {
+			if s != "" {
+				sig := eth.MustNewHash(s)
+				sigs = append(sigs, sig)
+			}
+		}
+
+		mf.CallFilters = append(mf.CallFilters, basicCallToFilter(addrs, sigs))
+	}
+
+	t, err := anypb.New(mf)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+
+}
+
+func basicCallToFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransform.CallToFilter {
+	var addrBytes [][]byte
+	var sigsBytes [][]byte
+
+	for _, addr := range addrs {
+		b := addr.Bytes()
+		addrBytes = append(addrBytes, b)
+	}
+
+	for _, sig := range sigs {
+		b := sig.Bytes()
+		sigsBytes = append(sigsBytes, b)
+	}
+
+	return &pbtransform.CallToFilter{
+		Addresses:  addrBytes,
+		Signatures: sigsBytes,
+	}
 }
