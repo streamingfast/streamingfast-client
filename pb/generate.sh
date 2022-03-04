@@ -28,14 +28,14 @@ function main() {
 
   pushd "$ROOT/pb" &> /dev/null
   generate $PROTO_ETHEREUM "sf/ethereum/codec/v1/codec.proto"
-  generate $PROTO_ETHEREUM "sf/ethereum/transforms/v1/transforms.proto"
+  generate $PROTO_ETHEREUM "sf/ethereum/transform/v1/transforms.proto"
 
   generate $PROTO_SOLANA "sf/solana/codec/v1/codec.proto"
   generate $PROTO_SOLANA "sf/solana/transforms/v1/transforms.proto"
 
   generate $PROTO_NEAR "sf/near/codec/v1/codec.proto"
-  test -e ${PROTO_NEAR}/sf/near/transforms/v1/transforms.proto && 
-    generate $PROTO_NEAR "sf/near/transforms/v1/transforms.proto"
+  test -e ${PROTO_NEAR}/sf/near/transform/v1/transform.proto && 
+    generate $PROTO_NEAR "sf/near/transform/v1/transform.proto"
 
   echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
   echo "streamingfast/proto-ethereum revision: `GIT_DIR=$PROTO_ETHEREUM.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt

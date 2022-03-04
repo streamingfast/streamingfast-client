@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
-	pbtransforms "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/transforms/v1"
+	pbtransform "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/transform/v1"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -153,11 +153,11 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 }
 
 func lightBlockTransform() (*anypb.Any, error) {
-	transform := &pbtransforms.LightBlock{}
+	transform := &pbtransform.LightBlock{}
 	return anypb.New(transform)
 }
 
-func basicLogFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransforms.BasicLogFilter {
+func basicLogFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransform.LogFilter {
 	var addrBytes [][]byte
 	var sigsBytes [][]byte
 
@@ -171,7 +171,7 @@ func basicLogFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransforms.BasicLog
 		sigsBytes = append(sigsBytes, b)
 	}
 
-	return &pbtransforms.BasicLogFilter{
+	return &pbtransform.LogFilter{
 		Addresses:       addrBytes,
 		EventSignatures: sigsBytes,
 	}
@@ -196,7 +196,7 @@ func parseSingleLogFilter(addrFilters []string, sigFilters []string) (*anypb.Any
 
 func parseMultiLogFilter(in []string) (*anypb.Any, error) {
 
-	mf := &pbtransforms.MultiLogFilter{}
+	mf := &pbtransform.MultiLogFilter{}
 
 	for _, filter := range in {
 		parts := strings.Split(filter, ":")
@@ -218,7 +218,7 @@ func parseMultiLogFilter(in []string) (*anypb.Any, error) {
 			}
 		}
 
-		mf.BasicLogFilters = append(mf.BasicLogFilters, basicLogFilter(addrs, sigs))
+		mf.LogFilters = append(mf.LogFilters, basicLogFilter(addrs, sigs))
 	}
 
 	t, err := anypb.New(mf)

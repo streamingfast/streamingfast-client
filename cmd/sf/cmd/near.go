@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/near/codec/v1"
-	pbtransforms "github.com/streamingfast/streamingfast-client/pb/sf/near/transforms/v1"
+	pbtransform "github.com/streamingfast/streamingfast-client/pb/sf/near/transform/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -43,7 +43,7 @@ func nearSfCmdE(cmd *cobra.Command, args []string) error {
 
 	transforms := []*anypb.Any{}
 	if len(filterAccounts) != 0 {
-		t := &pbtransforms.BasicReceiptFilter{
+		t := &pbtransform.BasicReceiptFilter{
 			Accounts: filterAccounts,
 		}
 		transformAny, err := anypb.New(t)
