@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
 	pbtransform "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/transform/v1"
+	pbsubstreams "github.com/streamingfast/streamingfast-client/pb/sf/substreams/transform/v1"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -42,6 +42,8 @@ func init() {
 	ethSfCmd.Flags().Bool("xdai", false, "When set, will change the default endpoint to xDai Chain")
 
 	// Transforms
+	ethSfCmd.Flags().Bool("substreams", false, "When set, add empty transform for substreams")
+
 	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
 	ethSfCmd.Flags().StringSlice("log-filter-multi", nil, "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters. Mutually exclusive with --log-filter-addresses and --log-filter-event-sigs.")
 	ethSfCmd.Flags().StringSlice("log-filter-addresses", nil, "Basic filter. List of addresses with which to filter blocks. Mutually exclusive with --log-filter-multi.")
@@ -101,6 +103,14 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 
 	if viper.GetBool("eth-cmd-light-block") {
 		t, err := lightBlockTransform()
+		if err != nil {
+			return fmt.Errorf("unable to create light block transform: %w", err)
+		}
+		transforms = append(transforms, t)
+	}
+
+	if viper.GetBool("eth-cmd-substreams") {
+		t, err := substreams()
 		if err != nil {
 			return fmt.Errorf("unable to create light block transform: %w", err)
 		}
@@ -178,13 +188,14 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		endpoint:    endpoint,
 		handleForks: viper.GetBool("global-handle-forks"),
 		transforms:  transforms,
-	},
-		func() proto.Message {
-			return &pbcodec.Block{}
-		},
-		func(message proto.Message) sf.BlockRef {
-			return message.(*pbcodec.Block).AsRef()
-		})
+	}, func() proto.Message {
+		return &pbcodec.Block{}
+	})
+}
+
+func substreams() (*anypb.Any, error) {
+	sub := &pbsubstreams.Transform{}
+	return anypb.New(sub)
 }
 
 func lightBlockTransform() (*anypb.Any, error) {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/streamingfast/bstream"
 	dfuse "github.com/streamingfast/client-go"
 	"github.com/streamingfast/dgrpc"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
@@ -86,7 +87,7 @@ func newStream(endpoint string) (stream pbfirehose.StreamClient, client dfuse.Cl
 	return pbfirehose.NewStreamClient(conn), client, skipAuth, err
 }
 
-func launchStream(ctx context.Context, config streamConfig, blkFactory protocolBlockFactory, toRef protoToRef) error {
+func launchStream(ctx context.Context, config streamConfig, blkFactory protocolBlockFactory) error {
 	nextStatus := time.Now().Add(statusFrequency)
 	cursor := config.cursor
 	lastBlockRef := sf.EmptyBlockRef
@@ -138,7 +139,9 @@ stream:
 		}
 
 		for {
-			zlog.Debug("Waiting for message to reach us")
+			if tracer.Enabled() {
+				zlog.Debug("Waiting for message to reach us")
+			}
 			response, err := stream.Recv()
 			if err != nil {
 				if err == io.EOF {
@@ -154,14 +157,20 @@ stream:
 				break
 			}
 
-			zlog.Debug("Decoding received message's block")
 			block := blkFactory()
 			if err = anypb.UnmarshalTo(response.Block, block, proto.UnmarshalOptions{}); err != nil {
-				return fmt.Errorf("should have been able to unmarshal received block payload: %w", err)
+				if tracer.Enabled() {
+					zlog.Debug("response is not a block", zap.Error(err))
+				}
 			}
 
 			cursor = response.Cursor
-			lastBlockRef = toRef(block)
+			c, err := bstream.CursorFromOpaque(cursor)
+			if err != nil {
+				zlog.Warn("cannot decode cursor", zap.Error(err), zap.String("cursor", cursor))
+			} else {
+				lastBlockRef = toRef(c)
+			}
 
 			if tracer.Enabled() {
 				zlog.Debug("Block received",
@@ -184,7 +193,7 @@ stream:
 				}
 			}
 
-			config.stats.recordBlock(int64(proto.Size(block)))
+			config.stats.recordBlock(int64(proto.Size(response)))
 		}
 
 		time.Sleep(5 * time.Second)
@@ -205,4 +214,11 @@ stream:
 	printf("Block received: %s\n", config.stats.blockReceived.Overall(elapsed))
 	printf("Bytes received: %s\n", config.stats.bytesReceived.Overall(elapsed))
 	return nil
+}
+
+func toRef(in *bstream.Cursor) sf.BlockRef {
+	return sf.BlockRef{
+		ID:     in.Block.ID(),
+		Number: in.Block.Num(),
+	}
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/solana/codec/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -69,8 +68,5 @@ func solSfCmdE(cmd *cobra.Command, args []string) error {
 	},
 		func() proto.Message {
 			return &pbcodec.Block{}
-		},
-		func(message proto.Message) sf.BlockRef {
-			return message.(*pbcodec.Block).AsRef()
 		})
 }

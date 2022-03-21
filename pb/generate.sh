@@ -19,6 +19,7 @@ ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 PROTO_ETHEREUM=${1:-"$ROOT/../proto-ethereum/"}
 PROTO_SOLANA=${1:-"$ROOT/../proto-solana/"}
 PROTO_NEAR=${1:-"$ROOT/../proto-near/"}
+PROTO_SUBSTREAMS=${1:-"$ROOT/../substreams/proto/"}
 
 function main() {
   checks
@@ -32,6 +33,8 @@ function main() {
 
   generate $PROTO_SOLANA "sf/solana/codec/v1/codec.proto"
   generate $PROTO_SOLANA "sf/solana/transforms/v1/transforms.proto"
+
+  generate $PROTO_SUBSTREAMS "sf/substreams/transform/v1/transform.proto"
 
   generate $PROTO_NEAR "sf/near/codec/v1/codec.proto"
   test -e ${PROTO_NEAR}/sf/near/transform/v1/transform.proto && 
@@ -56,6 +59,7 @@ function generate() {
       protoc \
       -I$PROTO_ETHEREUM \
       -I$PROTO_SOLANA \
+      -I$PROTO_SUBSTREAMS \
       -I$PROTO_NEAR \
         --go_out=. --go_opt=paths=source_relative \
         --go-grpc_out=. --go-grpc_opt=paths=source_relative,require_unimplemented_servers=false \

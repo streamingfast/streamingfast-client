@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	sf "github.com/streamingfast/streamingfast-client"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/near/codec/v1"
 	pbtransform "github.com/streamingfast/streamingfast-client/pb/sf/near/transform/v1"
 	"google.golang.org/protobuf/proto"
@@ -82,9 +81,5 @@ func nearSfCmdE(cmd *cobra.Command, args []string) error {
 	},
 		func() proto.Message {
 			return &pbcodec.Block{}
-		},
-		func(message proto.Message) sf.BlockRef {
-			b := message.(*pbcodec.Block)
-			return sf.NewBlockRef(b.Header.Hash.String(), b.Header.Height)
 		})
 }
