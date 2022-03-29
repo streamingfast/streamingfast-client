@@ -194,7 +194,18 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 }
 
 func substreams() (*anypb.Any, error) {
-	sub := &pbsubstreams.Transform{}
+	sub := &pbsubstreams.Transform{
+		OutputModule: "mymod",
+		Manifest: &pbsubstreams.Manifest{
+			SpecVersion: "1.0",
+			Description: "something",
+			Modules: []*pbsubstreams.Module{
+				{
+					Name: "mymod",
+				},
+			},
+		},
+	}
 	return anypb.New(sub)
 }
 
