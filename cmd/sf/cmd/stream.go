@@ -189,7 +189,8 @@ stream:
 
 			if config.writer != nil {
 				if err := writeBlock(config.writer, response, lastBlockRef); err != nil {
-					return err
+					_ = err
+					fmt.Println(response)
 				}
 			}
 

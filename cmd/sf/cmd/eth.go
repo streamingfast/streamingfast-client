@@ -6,12 +6,14 @@ import (
 	"strings"
 
 	"github.com/streamingfast/eth-go"
+	"github.com/streamingfast/substreams/manifest"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	pbtransform "github.com/streamingfast/sf-ethereum/pb/sf/ethereum/transform/v1"
 	pbcodec "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/codec/v1"
-	pbtransform "github.com/streamingfast/streamingfast-client/pb/sf/ethereum/transform/v1"
-	pbsubstreams "github.com/streamingfast/streamingfast-client/pb/sf/substreams/transform/v1"
+
+	pbsubstreams "github.com/streamingfast/substreams/pb/sf/substreams/transform/v1"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -42,7 +44,7 @@ func init() {
 	ethSfCmd.Flags().Bool("xdai", false, "When set, will change the default endpoint to xDai Chain")
 
 	// Transforms
-	ethSfCmd.Flags().Bool("substreams", false, "When set, add empty transform for substreams")
+	ethSfCmd.Flags().String("substreams", "", "When set, add empty transform for substreams")
 
 	ethSfCmd.Flags().Bool("light-block", false, "When set, returned blocks will be stripped of some information")
 	ethSfCmd.Flags().StringSlice("log-filter-multi", nil, "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters. Mutually exclusive with --log-filter-addresses and --log-filter-event-sigs.")
@@ -109,10 +111,10 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 		transforms = append(transforms, t)
 	}
 
-	if viper.GetBool("eth-cmd-substreams") {
-		t, err := substreams()
+	if subs := viper.GetString("eth-cmd-substreams"); subs != "" {
+		t, err := substreams(subs)
 		if err != nil {
-			return fmt.Errorf("unable to create light block transform: %w", err)
+			return fmt.Errorf("unable to create substreams transform: %w", err)
 		}
 		transforms = append(transforms, t)
 	}
@@ -193,25 +195,31 @@ func ethSfRunE(cmd *cobra.Command, args []string) error {
 	})
 }
 
-func substreams() (*anypb.Any, error) {
+func substreams(subs string) (*anypb.Any, error) {
+	parts := strings.Split(subs, ",")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("substreams param should be 'path/to/file.yaml,module-name'")
+	}
+	manif, err := manifest.New(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("loadmanif: %w", err)
+	}
+	manifProto, err := manif.ToProto()
+	if err != nil {
+		return nil, fmt.Errorf("toproto: %w", err)
+	}
+
 	sub := &pbsubstreams.Transform{
-		OutputModule: "mymod",
-		Manifest: &pbsubstreams.Manifest{
-			SpecVersion: "1.0",
-			Description: "something",
-			Modules: []*pbsubstreams.Module{
-				{
-					Name: "mymod",
-				},
-			},
-		},
+		OutputModule: parts[1],
+		Manifest:     manifProto,
 	}
 	return anypb.New(sub)
 }
 
 func lightBlockTransform() (*anypb.Any, error) {
-	transform := &pbtransform.LightBlock{}
-	return anypb.New(transform)
+	//	transform := &pbtransform.LightBlock{}
+	//	return anypb.New(transform)
+	return nil, nil
 }
 
 func basicLogFilter(addrs []eth.Address, sigs []eth.Hash) *pbtransform.LogFilter {
