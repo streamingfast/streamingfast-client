@@ -61,6 +61,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolP("skip-auth", "a", false, "Skips the authentication")
 	RootCmd.PersistentFlags().StringP("output", "o", "-", "When set, write each block as one JSON line in the specified file, value '-' writes to standard output otherwise to a file, {range} is replaced by block range in this case")
 	RootCmd.PersistentFlags().String("start-cursor", "", "Last cursor used to continue where you left off")
+	RootCmd.PersistentFlags().String("auth-endpoint", "", "Use an alternative authentication endpoint for retrieving access tokens.")
 }
 
 func Execute() {

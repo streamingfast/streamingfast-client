@@ -55,6 +55,10 @@ func newStream(endpoint string) (stream pbfirehose.StreamClient, client dfuse.Cl
 		skipAuth = true
 	}
 
+	if authEndpoint := viper.GetString("global-auth-endpoint"); authEndpoint != "" && !skipAuth {
+		clientOptions = []dfuse.ClientOption{dfuse.WithAuthURL(authEndpoint)}
+	}
+
 	client, err = dfuse.NewClient(endpoint, apiKey, clientOptions...)
 	if err != nil {
 		return nil, nil, false, fmt.Errorf("unable to create streamingfast client")
