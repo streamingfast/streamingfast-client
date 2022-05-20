@@ -7,6 +7,10 @@ project adheres to
 [MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
 date.
 
+## Unreleased
+
+Added `--auth-endpoint` to make the authentication endpoint configurable.
+
 # v0.0.7
 
 Added --xdai endpoint
